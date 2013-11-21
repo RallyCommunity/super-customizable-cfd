@@ -212,7 +212,8 @@ Ext.define('Rally.technicalservices.SettingsDialog',{
             fieldLabel: 'Start Date',
             itemId: 'start_date_chooser',
             labelWidth: 75,
-            value: me.start_date
+            value: me.start_date,
+            validator: me._dateValidator
         });
         
         this.down('#end_date_selector_box').add({
@@ -220,8 +221,12 @@ Ext.define('Rally.technicalservices.SettingsDialog',{
             fieldLabel: 'End Date',
             itemId:'end_date_chooser',
             labelWidth: 75,
-            value: me.end_date
+            value: me.end_date,
+            validator: me._dateValidator
         });
+    },
+    _dateValidator: function(value) {
+        return true;
     },
     _filterOutExceptChoices: function(store,records) {
         store.filter([{

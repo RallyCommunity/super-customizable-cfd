@@ -7,7 +7,6 @@ Ext.define('Rally.technicalservices.util.Utilities', {
         }
         return result;
     },
-
     daysBetween: function(begin_date_js,end_date_js,skip_weekends){
         var dDate1 = Ext.clone(begin_date_js).setHours(0,0,0,0);
         var dDate2 = Ext.clone(end_date_js).setHours(0,0,0,0);
@@ -61,8 +60,23 @@ Ext.define('Rally.technicalservices.util.Utilities', {
         return weekday;
     },
     
-    arrayOfDaysBetween: function(begin_date_js, end_date_js, skip_weekends ) {
+    /*
+     * compress size is the point at which to move to weeks instead of days
+     */
+    arrayOfDaysBetween: function(begin_date_js, end_date_js, skip_weekends, compress_size ) {
         var the_array = [];
+        
+        if ( begin_date_js > end_date_js ) {
+            var swap_holder = end_date_js;
+            end_date_js = begin_date_js;
+            begin_date_js = swap_holder;
+        }
+        var number_of_days = this.daysBetween(begin_date_js,end_date_js,skip_weekends);
+        
+        var add_value = 1;
+        if ( Ext.isNumber(compress_size) && number_of_days > compress_size ) {
+            add_value = 7;
+        }
         
         var dDate1 = Ext.clone(begin_date_js).setHours(0,0,0,0);
         var dDate2 = Ext.clone(end_date_js).setHours(0,0,0,0);
@@ -70,14 +84,13 @@ Ext.define('Rally.technicalservices.util.Utilities', {
         var check_date = new Date(dDate1);
         
         while (check_date <= dDate2) {
-            if ( !skip_weekends || this.isWeekday(check_date) ) {
+            if ( !skip_weekends || this.isWeekday(check_date) || add_value === 7 ) {
                 the_array.push(check_date);
             }
-            check_date = Rally.util.DateTime.add(check_date,'day',1);
+            check_date = Rally.util.DateTime.add(check_date,'day',add_value);
         }
         
         return the_array;
     }
-    
     
 });

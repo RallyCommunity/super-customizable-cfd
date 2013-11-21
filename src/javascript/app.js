@@ -8,7 +8,12 @@ Ext.define('CustomApp', {
         end_date: Rally.util.DateTime.add(new Date(),"day",-1),
         group_by_field_name: 'ScheduleState',
         metric: 'Count',
-        groups:[]
+        groups:[],
+        /**
+         * At this number of days, switch to displaying by week instead of by day
+         * @type Number
+         */
+        day_to_week_switch_point: 45
     },
     logger: new Rally.technicalservices.Logger(),
     items: [
@@ -42,6 +47,9 @@ Ext.define('CustomApp', {
                 settingsChosen: function(dialog,returned_config) {
                     this.config = Ext.Object.merge(this.config,returned_config);
                     this.logger.log("new config",this.config);
+                    if ( this.config.start_date < new Date(2011,10,11) ) { this.config.start_date = new Date(2011,10,11); }
+                    if ( this.config.end_date < new Date(2011,10,11) ) { this.config.end_date = new Date(2011,10,11); }
+                    
                     this._reCalculate();
                 },
                 scope: this
@@ -54,7 +62,9 @@ Ext.define('CustomApp', {
         this.down('#chart_box').removeAll();
         this.getEl().mask("Loading");
 
-        var array_of_days = Rally.technicalservices.util.Utilities.arrayOfDaysBetween(this.config.start_date,this.config.end_date,true);
+        var config = this.config;
+        
+        var array_of_days = Rally.technicalservices.util.Utilities.arrayOfDaysBetween(config.start_date,config.end_date,true,config.day_to_week_switch_point);
         
         var promises = _.map(array_of_days,me._getSnapshots,this);
         promises.push(me._getValidFieldChoices(),this);
@@ -234,6 +244,7 @@ Ext.define('CustomApp', {
                 ],
                 plotOptions: {
                     series: {
+                        marker: { enabled: false },
                         stacking: 'normal'
                     }
                 }

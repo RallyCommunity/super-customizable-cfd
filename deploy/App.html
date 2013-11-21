@@ -3,11 +3,11 @@
 <head>
     <title>Super Customizable Cumulative Flow Diagram</title>
     <!--  (c) 2013 Rally Software Development Corp.  All Rights Reserved. -->
-    <!--  Build Date: Thu Nov 21 2013 08:53:54 GMT-0800 (PST) -->
+    <!--  Build Date: Thu Nov 21 2013 10:06:06 GMT-0800 (PST) -->
     
     <script type="text/javascript">
-        var APP_BUILD_DATE = "Thu Nov 21 2013 08:53:54 GMT-0800 (PST)";
-        var CHECKSUM = 22395952228;
+        var APP_BUILD_DATE = "Thu Nov 21 2013 10:06:06 GMT-0800 (PST)";
+        var CHECKSUM = 27310896627;
     </script>
     
     <script type="text/javascript" src="/apps/2.0rc1/sdk.js"></script>
@@ -205,10 +205,13 @@ Ext.define('Rally.technicalservices.SettingsDialog',{
     extend: 'Rally.ui.dialog.Dialog',
     alias: 'widget.tssettingsdialog',
     config: {
+        /* default settings. pass new ones in */
         title: 'Settings',
         model_type: 'HierarchicalRequirement',
         group_by_field_name: 'Schedulestate',
-        metric: 'Count'
+        metric: 'Count',
+        start_date:Rally.util.DateTime.add(new Date(),"month",-1),
+        end_date: Rally.util.DateTime.add(new Date(),"day",-1)
     },
     items: {
         xtype: 'panel',
@@ -229,6 +232,14 @@ Ext.define('Rally.technicalservices.SettingsDialog',{
             {
                 xtype:'container',
                 itemId: 'metric_selector_box'
+            },
+            {
+                xtype:'container',
+                itemId:'start_date_selector_box'
+            },
+            {
+                xtype:'container',
+                itemId:'end_date_selector_box'
             }
         ]
     },
@@ -301,6 +312,13 @@ Ext.define('Rally.technicalservices.SettingsDialog',{
         if ( this.down('#metric_chooser') ) {
             config.metric = this.down('#metric_chooser').getValue();
         }
+        
+        if ( this.down('#start_date_chooser') ) {
+            config.start_date = this.down('#start_date_chooser').getValue();
+        }
+        if ( this.down('#end_date_chooser') ) {
+            config.end_date = this.down('#end_date_chooser').getValue();
+        }
         return config;
     },
     _addChoosers: function() {
@@ -308,6 +326,7 @@ Ext.define('Rally.technicalservices.SettingsDialog',{
         this._addModelChooser();
         this._addGroupChooser();
         this._addMetricChooser();
+        this._addDateChoosers();
     },
     _addModelChooser: function() {
         var me = this;
@@ -389,6 +408,29 @@ Ext.define('Rally.technicalservices.SettingsDialog',{
             }
         });
     },
+    _addDateChoosers: function() {
+        var me = this;
+        this.down('#start_date_selector_box').add({
+            xtype: 'rallydatefield',
+            fieldLabel: 'Start Date',
+            itemId: 'start_date_chooser',
+            labelWidth: 75,
+            value: me.start_date,
+            validator: me._dateValidator
+        });
+        
+        this.down('#end_date_selector_box').add({
+            xtype: 'rallydatefield',
+            fieldLabel: 'End Date',
+            itemId:'end_date_chooser',
+            labelWidth: 75,
+            value: me.end_date,
+            validator: me._dateValidator
+        });
+    },
+    _dateValidator: function(value) {
+        return true;
+    },
     _filterOutExceptChoices: function(store,records) {
         store.filter([{
             filterFn:function(field){ 
@@ -428,7 +470,6 @@ Ext.define('Rally.technicalservices.util.Utilities', {
         }
         return result;
     },
-
     daysBetween: function(begin_date_js,end_date_js,skip_weekends){
         var dDate1 = Ext.clone(begin_date_js).setHours(0,0,0,0);
         var dDate2 = Ext.clone(end_date_js).setHours(0,0,0,0);
@@ -482,8 +523,23 @@ Ext.define('Rally.technicalservices.util.Utilities', {
         return weekday;
     },
     
-    arrayOfDaysBetween: function(begin_date_js, end_date_js, skip_weekends ) {
+    /*
+     * compress size is the point at which to move to weeks instead of days
+     */
+    arrayOfDaysBetween: function(begin_date_js, end_date_js, skip_weekends, compress_size ) {
         var the_array = [];
+        
+        if ( begin_date_js > end_date_js ) {
+            var swap_holder = end_date_js;
+            end_date_js = begin_date_js;
+            begin_date_js = swap_holder;
+        }
+        var number_of_days = this.daysBetween(begin_date_js,end_date_js,skip_weekends);
+        
+        var add_value = 1;
+        if ( Ext.isNumber(compress_size) && number_of_days > compress_size ) {
+            add_value = 7;
+        }
         
         var dDate1 = Ext.clone(begin_date_js).setHours(0,0,0,0);
         var dDate2 = Ext.clone(end_date_js).setHours(0,0,0,0);
@@ -491,15 +547,14 @@ Ext.define('Rally.technicalservices.util.Utilities', {
         var check_date = new Date(dDate1);
         
         while (check_date <= dDate2) {
-            if ( !skip_weekends || this.isWeekday(check_date) ) {
+            if ( !skip_weekends || this.isWeekday(check_date) || add_value === 7 ) {
                 the_array.push(check_date);
             }
-            check_date = Rally.util.DateTime.add(check_date,'day',1);
+            check_date = Rally.util.DateTime.add(check_date,'day',add_value);
         }
         
         return the_array;
     }
-    
     
 });
 Ext.define('CustomApp', {
@@ -508,16 +563,21 @@ Ext.define('CustomApp', {
 
     config: {
         model_type:'HierarchicalRequirement',
-        start_date: Rally.util.DateTime.add(new Date(),"month",-1),
-        end_date: new Date(),
+        start_date: Rally.util.DateTime.add(new Date(),"month",-3),
+        end_date: Rally.util.DateTime.add(new Date(),"day",-1),
         group_by_field_name: 'ScheduleState',
         metric: 'Count',
-        groups:[]
+        groups:[],
+        /**
+         * At this number of days, switch to displaying by week instead of by day
+         * @type Number
+         */
+        day_to_week_switch_point: 45
     },
     logger: new Rally.technicalservices.Logger(),
     items: [
         {xtype:'container',itemId:'selector_box', margin: 5, padding: 5},
-        {xtype:'container',itemId:'chart_box', margin: 5, padding: 5},
+        {xtype:'container',itemId:'chart_box', margin: 10, padding: 10},
         {xtype:'tsinfolink',informationHtml:"<strong>Super-Customizable CFD</strong><p/>Start by pushing the Settings button"}
     ],
     launch: function() {
@@ -540,10 +600,15 @@ Ext.define('CustomApp', {
             model_type: config.model_type,
             group_by_field_name: config.group_by_field_name,
             metric: config.metric,
+            start_date: config.start_date,
+            end_date: config.end_date,
             listeners: {
                 settingsChosen: function(dialog,returned_config) {
                     this.config = Ext.Object.merge(this.config,returned_config);
                     this.logger.log("new config",this.config);
+                    if ( this.config.start_date < new Date(2011,10,11) ) { this.config.start_date = new Date(2011,10,11); }
+                    if ( this.config.end_date < new Date(2011,10,11) ) { this.config.end_date = new Date(2011,10,11); }
+                    
                     this._reCalculate();
                 },
                 scope: this
@@ -556,7 +621,9 @@ Ext.define('CustomApp', {
         this.down('#chart_box').removeAll();
         this.getEl().mask("Loading");
 
-        var array_of_days = Rally.technicalservices.util.Utilities.arrayOfDaysBetween(this.config.start_date,this.config.end_date,true);
+        var config = this.config;
+        
+        var array_of_days = Rally.technicalservices.util.Utilities.arrayOfDaysBetween(config.start_date,config.end_date,true,config.day_to_week_switch_point);
         
         var promises = _.map(array_of_days,me._getSnapshots,this);
         promises.push(me._getValidFieldChoices(),this);
@@ -711,7 +778,6 @@ Ext.define('CustomApp', {
             },
             chartConfig: {
                 chart: { 
-                    width: me.getWidth(),
                     type:'area'
                 },
                 title: {
@@ -737,6 +803,7 @@ Ext.define('CustomApp', {
                 ],
                 plotOptions: {
                     series: {
+                        marker: { enabled: false },
                         stacking: 'normal'
                     }
                 }
