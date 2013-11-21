@@ -10,6 +10,8 @@ describe("Using the rally utilities",function() {
         var second_monday_begin = new Date(2013,08,16,0,0,0);
         var third_monday_begin = new Date(2013,08,23,0,0,0);
         
+        var three_month_start_monday = new Date(2013,10,25,0,0,0);
+        var three_month_end_monday = new Date(2014,0,27,0,0,0);
         
         
         it('should count the number of days as zero on the same day',function() {
@@ -87,6 +89,17 @@ describe("Using the rally utilities",function() {
             expect( array_of_days.length ).toEqual(17);
             expect( array_of_days[0] ).toEqual(first_saturday_begin);
             expect( array_of_days[16] ).toEqual(third_monday_begin);
+            
+        });
+        
+        it('should return an array of days spaced a week apart when there are more than 75 days',function(){
+            var date1 = three_month_start_monday;
+            var date2 = three_month_end_monday;
+            var array_of_days = Rally.technicalservices.util.Utilities.arrayOfDaysBetween(date1,date2,true);
+            
+            expect(array_of_days.length).toEqual(10);
+            expect(array_of_days[0]).toEqual(date1);
+            expect(array_of_days[9]).toEqual(date2);
             
         });
     });

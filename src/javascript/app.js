@@ -4,8 +4,8 @@ Ext.define('CustomApp', {
 
     config: {
         model_type:'HierarchicalRequirement',
-        start_date: Rally.util.DateTime.add(new Date(),"month",-1),
-        end_date: new Date(),
+        start_date: Rally.util.DateTime.add(new Date(),"month",-3),
+        end_date: Rally.util.DateTime.add(new Date(),"day",-1),
         group_by_field_name: 'ScheduleState',
         metric: 'Count',
         groups:[]
@@ -13,7 +13,7 @@ Ext.define('CustomApp', {
     logger: new Rally.technicalservices.Logger(),
     items: [
         {xtype:'container',itemId:'selector_box', margin: 5, padding: 5},
-        {xtype:'container',itemId:'chart_box', margin: 5, padding: 5},
+        {xtype:'container',itemId:'chart_box', margin: 10, padding: 10},
         {xtype:'tsinfolink',informationHtml:"<strong>Super-Customizable CFD</strong><p/>Start by pushing the Settings button"}
     ],
     launch: function() {
@@ -36,6 +36,8 @@ Ext.define('CustomApp', {
             model_type: config.model_type,
             group_by_field_name: config.group_by_field_name,
             metric: config.metric,
+            start_date: config.start_date,
+            end_date: config.end_date,
             listeners: {
                 settingsChosen: function(dialog,returned_config) {
                     this.config = Ext.Object.merge(this.config,returned_config);
@@ -207,7 +209,6 @@ Ext.define('CustomApp', {
             },
             chartConfig: {
                 chart: { 
-                    width: me.getWidth(),
                     type:'area'
                 },
                 title: {

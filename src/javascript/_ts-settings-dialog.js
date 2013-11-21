@@ -2,10 +2,13 @@ Ext.define('Rally.technicalservices.SettingsDialog',{
     extend: 'Rally.ui.dialog.Dialog',
     alias: 'widget.tssettingsdialog',
     config: {
+        /* default settings. pass new ones in */
         title: 'Settings',
         model_type: 'HierarchicalRequirement',
         group_by_field_name: 'Schedulestate',
-        metric: 'Count'
+        metric: 'Count',
+        start_date:Rally.util.DateTime.add(new Date(),"month",-1),
+        end_date: Rally.util.DateTime.add(new Date(),"day",-1)
     },
     items: {
         xtype: 'panel',
@@ -26,6 +29,14 @@ Ext.define('Rally.technicalservices.SettingsDialog',{
             {
                 xtype:'container',
                 itemId: 'metric_selector_box'
+            },
+            {
+                xtype:'container',
+                itemId:'start_date_selector_box'
+            },
+            {
+                xtype:'container',
+                itemId:'end_date_selector_box'
             }
         ]
     },
@@ -98,6 +109,13 @@ Ext.define('Rally.technicalservices.SettingsDialog',{
         if ( this.down('#metric_chooser') ) {
             config.metric = this.down('#metric_chooser').getValue();
         }
+        
+        if ( this.down('#start_date_chooser') ) {
+            config.start_date = this.down('#start_date_chooser').getValue();
+        }
+        if ( this.down('#end_date_chooser') ) {
+            config.end_date = this.down('#end_date_chooser').getValue();
+        }
         return config;
     },
     _addChoosers: function() {
@@ -105,6 +123,7 @@ Ext.define('Rally.technicalservices.SettingsDialog',{
         this._addModelChooser();
         this._addGroupChooser();
         this._addMetricChooser();
+        this._addDateChoosers();
     },
     _addModelChooser: function() {
         var me = this;
@@ -184,6 +203,24 @@ Ext.define('Rally.technicalservices.SettingsDialog',{
                 },
                 single: true
             }
+        });
+    },
+    _addDateChoosers: function() {
+        var me = this;
+        this.down('#start_date_selector_box').add({
+            xtype: 'rallydatefield',
+            fieldLabel: 'Start Date',
+            itemId: 'start_date_chooser',
+            labelWidth: 75,
+            value: me.start_date
+        });
+        
+        this.down('#end_date_selector_box').add({
+            xtype: 'rallydatefield',
+            fieldLabel: 'End Date',
+            itemId:'end_date_chooser',
+            labelWidth: 75,
+            value: me.end_date
         });
     },
     _filterOutExceptChoices: function(store,records) {
