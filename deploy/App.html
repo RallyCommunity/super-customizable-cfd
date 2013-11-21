@@ -3,11 +3,11 @@
 <head>
     <title>Super Customizable Cumulative Flow Diagram</title>
     <!--  (c) 2013 Rally Software Development Corp.  All Rights Reserved. -->
-    <!--  Build Date: Thu Nov 21 2013 10:39:02 GMT-0800 (PST) -->
+    <!--  Build Date: Thu Nov 21 2013 10:56:32 GMT-0800 (PST) -->
     
     <script type="text/javascript">
-        var APP_BUILD_DATE = "Thu Nov 21 2013 10:39:02 GMT-0800 (PST)";
-        var CHECKSUM = 30253968446;
+        var APP_BUILD_DATE = "Thu Nov 21 2013 10:56:32 GMT-0800 (PST)";
+        var CHECKSUM = 30706009441;
     </script>
     
     <script type="text/javascript" src="/apps/2.0rc1/sdk.js"></script>
@@ -447,6 +447,10 @@ Ext.define('Rally.technicalservices.SettingsDialog',{
                         return true;
                     }
                 }
+                if ( field.get('name') === 'State' ) { 
+                    return true;
+                }
+                //console.log(field.get('name'),field.get('fieldDefinition').attributeDefinition.AttributeType);
                 return false;
             } 
         }]);

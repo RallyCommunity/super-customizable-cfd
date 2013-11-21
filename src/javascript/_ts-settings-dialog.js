@@ -244,6 +244,10 @@ Ext.define('Rally.technicalservices.SettingsDialog',{
                         return true;
                     }
                 }
+                if ( field.get('name') === 'State' ) { 
+                    return true;
+                }
+                //console.log(field.get('name'),field.get('fieldDefinition').attributeDefinition.AttributeType);
                 return false;
             } 
         }]);
