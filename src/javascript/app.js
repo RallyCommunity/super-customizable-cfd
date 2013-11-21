@@ -51,6 +51,7 @@ Ext.define('CustomApp', {
     _reCalculate:function() {
         var me = this;
         this.down('#chart_box').removeAll();
+        this.getEl().mask("Loading");
 
         var array_of_days = Rally.technicalservices.util.Utilities.arrayOfDaysBetween(this.config.start_date,this.config.end_date,true);
         
@@ -194,6 +195,8 @@ Ext.define('CustomApp', {
         
         this.logger.log('categories',categories);
         this.logger.log('series',series);
+        
+        this.getEl().unmask();
         
         this.down('#chart_box').add({
             xtype:'rallychart',

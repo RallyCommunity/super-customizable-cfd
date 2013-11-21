@@ -3,11 +3,11 @@
 <head>
     <title>Super Customizable Cumulative Flow Diagram</title>
     <!--  (c) 2013 Rally Software Development Corp.  All Rights Reserved. -->
-    <!--  Build Date: Wed Nov 20 2013 21:23:18 GMT-0800 (PST) -->
+    <!--  Build Date: Thu Nov 21 2013 08:37:41 GMT-0800 (PST) -->
     
     <script type="text/javascript">
-        var APP_BUILD_DATE = "Wed Nov 20 2013 21:23:18 GMT-0800 (PST)";
-        var CHECKSUM = 21663123924;
+        var APP_BUILD_DATE = "Thu Nov 21 2013 08:37:41 GMT-0800 (PST)";
+        var CHECKSUM = 21790479192;
     </script>
     
     <script type="text/javascript" src="/apps/2.0rc1/sdk.js"></script>
@@ -549,6 +549,7 @@ Ext.define('CustomApp', {
     _reCalculate:function() {
         var me = this;
         this.down('#chart_box').removeAll();
+        this.getEl().mask("Loading");
 
         var array_of_days = Rally.technicalservices.util.Utilities.arrayOfDaysBetween(this.config.start_date,this.config.end_date,true);
         
@@ -692,6 +693,8 @@ Ext.define('CustomApp', {
         
         this.logger.log('categories',categories);
         this.logger.log('series',series);
+        
+        this.getEl().unmask();
         
         this.down('#chart_box').add({
             xtype:'rallychart',
