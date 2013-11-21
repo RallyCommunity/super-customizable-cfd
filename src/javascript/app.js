@@ -13,7 +13,8 @@ Ext.define('CustomApp', {
          * At this number of days, switch to displaying by week instead of by day
          * @type Number
          */
-        day_to_week_switch_point: 45
+        day_to_week_switch_point: 45,
+        query_string: null
     },
     logger: new Rally.technicalservices.Logger(),
     items: [
@@ -80,6 +81,7 @@ Ext.define('CustomApp', {
             start_date: config.start_date,
             end_date: config.end_date,
             artifact_types: config.artifact_types,
+            query_string: config.query_string,
             listeners: {
                 settingsChosen: function(dialog,returned_config) {
                     this.config = Ext.Object.merge(this.config,returned_config);
@@ -99,8 +101,71 @@ Ext.define('CustomApp', {
         this.down('#chart_box').removeAll();
         this.getEl().mask("Loading");
 
-        var config = this.config;
+        this.config.limit_to_oids = null;
         
+        if ( this.config.query_string ) { 
+            this.logger.log("Using query:",this.config.query_string);
+            
+            this._limitRecordsByQuery(this.config.model_type, this.config.query_string).then({
+                success: function(oids){
+                    me.config.limit_to_oids = oids;
+                    me._recalculateLookBack();
+                },
+                failure: function(error) {
+                    alert("Error while trying to apply filter");
+                    me.getEl().unmask();
+                }
+            });
+        } else {
+            this._recalculateLookBack(null);
+        }
+    },
+    _limitRecordsByQuery: function(model,query_string) {
+        this.logger.log("_limitRecordsByQuery");
+        
+        var deferred = Ext.create('Deft.Deferred');
+        
+        var filter = Ext.create('TSStringFilter',{query_string:query_string});
+        
+        Ext.create('Rally.data.WsapiDataStore',{
+            model: model,
+            autoLoad: true,
+            limit: 'Infinity',
+            filters: filter,
+            fetch: ['ObjectID'],
+            listeners: {
+                scope: this,
+                load: function(store,items,successful,opts){
+                    this.logger.log("wsapi load",successful,opts);
+                    if ( successful ) {
+                        var oids = [];
+                        Ext.Array.each(items, function(item){
+                            oids.push(item.get('ObjectID'));
+                        });
+                        this.logger.log("back from wsapi with",oids);
+                        deferred.resolve(oids);
+                    } else {
+                        deferred.reject("Error loading filter");
+                    }
+                }
+            }
+        });
+        return deferred.promise;
+    },
+    _shouldUseSnap: function(snap) {
+        if ( this.config.query_string ) {
+            var oids = this.config.limit_to_oids;
+            var oid = snap.get('ObjectID');
+            return Ext.Array.contains(oids,oid);
+        } else { 
+            return true;
+        }
+    },
+    _recalculateLookBack: function(limit_to_oids) {
+        var me = this;
+        
+        var config = this.config;
+                
         var array_of_days = Rally.technicalservices.util.Utilities.arrayOfDaysBetween(config.start_date,config.end_date,true,config.day_to_week_switch_point);
         
         var promises = _.map(array_of_days,me._getSnapshots,this);
@@ -109,7 +174,6 @@ Ext.define('CustomApp', {
         Deft.Promise.all(promises).then({
             success: function(days) {
                 // got back an array of calculated data for each day (tsday model) (plus the null back from the other call)
-                
                 days.pop();
                 days.pop();
                 me._makeChart(days);
@@ -153,6 +217,7 @@ Ext.define('CustomApp', {
         return deferred.promise;
     },
     _getSnapshots:function(day){
+        var me = this;
         var config = this.config;
         
         var deferred = Ext.create('Deft.Deferred');
@@ -180,7 +245,9 @@ Ext.define('CustomApp', {
                             JSDate: day
                         });
                         Ext.Array.each(snaps, function(snap){
-                            day_calculator.addSnap(snap);
+                            if ( me._shouldUseSnap(snap) ) {
+                                day_calculator.addSnap(snap);
+                            }
                         });
                         deferred.resolve(day_calculator);
                     } else {

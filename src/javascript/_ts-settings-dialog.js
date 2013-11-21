@@ -16,7 +16,15 @@ Ext.define('Rally.technicalservices.SettingsDialog',{
         group_by_field_name: 'Schedulestate',
         metric: 'Count',
         start_date:Rally.util.DateTime.add(new Date(),"month",-1),
-        end_date: Rally.util.DateTime.add(new Date(),"day",-1)
+        end_date: Rally.util.DateTime.add(new Date(),"day",-1),
+        /**
+         * A string to apply to choose records that are allowed in the calculations --
+         * this query is applied to items as they exist now, and then all the calculations are
+         * about only those records as they were during the time period.  
+         * 
+         * This can make everything slow, because it adds a WsapiCall on top of the LookBack calls
+         */
+         query_string: null
     },
     items: {
         xtype: 'panel',
@@ -45,6 +53,10 @@ Ext.define('Rally.technicalservices.SettingsDialog',{
             {
                 xtype:'container',
                 itemId:'end_date_selector_box'
+            },
+            {
+                xtype:'container',
+                itemId:'query_selector_box'
             }
         ]
     },
@@ -124,6 +136,9 @@ Ext.define('Rally.technicalservices.SettingsDialog',{
         if ( this.down('#end_date_chooser') ) {
             config.end_date = this.down('#end_date_chooser').getValue();
         }
+        if ( this.down('#query_chooser') ) {
+            config.query_string = this.down('#query_chooser').getValue();
+        }
         return config;
     },
     _addChoosers: function() {
@@ -132,6 +147,8 @@ Ext.define('Rally.technicalservices.SettingsDialog',{
         this._addGroupChooser();
         this._addMetricChooser();
         this._addDateChoosers();
+        this._addQueryChooser();
+        
     },
     _addModelChooser: function() {
         var me = this;
@@ -227,6 +244,17 @@ Ext.define('Rally.technicalservices.SettingsDialog',{
             labelWidth: 75,
             value: me.end_date,
             validator: me._dateValidator
+        });
+    },
+    _addQueryChooser: function() {
+        var me = this;
+        this.down('#query_selector_box').add({
+            xtype:'textareafield',
+            grow: true,
+            itemId:'query_chooser',
+            labelAlign: 'top',
+            fieldLabel:'Limit to items that currently meet this query filter',
+            value: me.query_string
         });
     },
     _dateValidator: function(value) {
