@@ -3,11 +3,11 @@
 <head>
     <title>Super Customizable Cumulative Flow Diagram</title>
     <!--  (c) 2013 Rally Software Development Corp.  All Rights Reserved. -->
-    <!--  Build Date: Wed Nov 20 2013 21:07:40 GMT-0800 (PST) -->
+    <!--  Build Date: Wed Nov 20 2013 21:20:46 GMT-0800 (PST) -->
     
     <script type="text/javascript">
-        var APP_BUILD_DATE = "Wed Nov 20 2013 21:07:40 GMT-0800 (PST)";
-        var CHECKSUM = 20754221133;
+        var APP_BUILD_DATE = "Wed Nov 20 2013 21:20:46 GMT-0800 (PST)";
+        var CHECKSUM = 21453674958;
     </script>
     
     <script type="text/javascript" src="/apps/2.0rc1/sdk.js"></script>
@@ -330,7 +330,7 @@ Ext.define('Rally.technicalservices.SettingsDialog',{
                 change: function(cb,new_value){
                     this.model_type = new_value;
                     this.group_by_field_name = null;
-                    this.metric = null;
+                    this.metric = "Count";
                     this._addGroupChooser();
                     this._addMetricChooser();
                 }
@@ -348,7 +348,17 @@ Ext.define('Rally.technicalservices.SettingsDialog',{
             value: me.group_by_field_name
         });
         var field_store = cb.getStore();
-        field_store.on('load',this._filterOutExceptChoices,this);
+        field_store.on({
+            'load': {
+                fn: function(store,records) {
+                    me._filterOutExceptChoices(store,records);
+                    if ( me.group_by_field_name === null ) {
+                        cb.setValue(store.getAt(0));
+                    }
+                },
+             'scope': me
+            }
+        });
 
     },
     _addMetricChooser: function() {
@@ -660,9 +670,11 @@ Ext.define('CustomApp', {
         });
         
         Ext.Array.each(groups,function(group_name){
+            var display_group_name = group_name;
+            if ( group_name == "" ) { display_group_name = "None"; }
             series.push({
                 type:'area',
-                name: group_name,
+                name: display_group_name,
                 data: group_data[group_name]
             });
         });

@@ -127,7 +127,7 @@ Ext.define('Rally.technicalservices.SettingsDialog',{
                 change: function(cb,new_value){
                     this.model_type = new_value;
                     this.group_by_field_name = null;
-                    this.metric = null;
+                    this.metric = "Count";
                     this._addGroupChooser();
                     this._addMetricChooser();
                 }
@@ -145,7 +145,17 @@ Ext.define('Rally.technicalservices.SettingsDialog',{
             value: me.group_by_field_name
         });
         var field_store = cb.getStore();
-        field_store.on('load',this._filterOutExceptChoices,this);
+        field_store.on({
+            'load': {
+                fn: function(store,records) {
+                    me._filterOutExceptChoices(store,records);
+                    if ( me.group_by_field_name === null ) {
+                        cb.setValue(store.getAt(0));
+                    }
+                },
+             'scope': me
+            }
+        });
 
     },
     _addMetricChooser: function() {

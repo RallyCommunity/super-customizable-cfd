@@ -172,9 +172,11 @@ Ext.define('CustomApp', {
         });
         
         Ext.Array.each(groups,function(group_name){
+            var display_group_name = group_name;
+            if ( group_name == "" ) { display_group_name = "None"; }
             series.push({
                 type:'area',
-                name: group_name,
+                name: display_group_name,
                 data: group_data[group_name]
             });
         });
