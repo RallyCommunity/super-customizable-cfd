@@ -3,11 +3,11 @@
 <head>
     <title>Super Customizable Cumulative Flow Diagram</title>
     <!--  (c) 2013 Rally Software Development Corp.  All Rights Reserved. -->
-    <!--  Build Date: Wed Nov 20 2013 18:46:46 GMT-0800 (PST) -->
+    <!--  Build Date: Wed Nov 20 2013 20:09:48 GMT-0800 (PST) -->
     
     <script type="text/javascript">
-        var APP_BUILD_DATE = "Wed Nov 20 2013 18:46:46 GMT-0800 (PST)";
-        var CHECKSUM = 15314010969;
+        var APP_BUILD_DATE = "Wed Nov 20 2013 20:09:48 GMT-0800 (PST)";
+        var CHECKSUM = 17105448983;
     </script>
     
     <script type="text/javascript" src="/apps/2.0rc1/sdk.js"></script>
@@ -48,7 +48,14 @@
         
         var snap_value = snap.get(group_by_field_name);
         
-        if ( snap_value ) {
+        if ( Ext.isDefined(snap_value) ) {
+            if ( Ext.isBoolean(snap_value) ) { 
+                if ( snap_value ) { 
+                    snap_value = "true"; 
+                } else { 
+                    snap_value = "false"; 
+                } 
+            }
             if ( ! this.group_totals[snap_value] ) { this.group_totals[snap_value] = 0; }
             this.group_totals[snap_value] = this.group_totals[snap_value] + 1;
         }
@@ -274,6 +281,7 @@ Ext.define('Rally.technicalservices.SettingsDialog',{
         }
         if ( this.down('#group_field_chooser') ) {
             config.group_by_field_name = this.down('#group_field_chooser').getValue();
+            config.group_by_field_type = this.down('#group_field_chooser').getRecord().get('fieldDefinition').attributeDefinition.AttributeType;
         }
         return config;
     },
@@ -312,12 +320,30 @@ Ext.define('Rally.technicalservices.SettingsDialog',{
         var me = this;
         
         this.down('#group_field_selector_box').removeAll();
-        this.down('#group_field_selector_box').add({
+        var cb = this.down('#group_field_selector_box').add({
             xtype:'rallyfieldcombobox',
             itemId: 'group_field_chooser',
             model: me.model_type,
             value: me.group_by_field_name
         });
+        var field_store = cb.getStore();
+        field_store.on('load',this._filterOutExceptChoices,this);
+
+    },
+    _filterOutExceptChoices: function(store,records) {
+        store.filter([{
+            filterFn:function(field){ 
+                if ( field.get('fieldDefinition').attributeDefinition.AttributeType == "BOOLEAN" ) {
+                    return true;
+                }
+                if ( field.get('fieldDefinition').attributeDefinition.AttributeType == "STRING" ) {
+                    if ( field.get('fieldDefinition').attributeDefinition.Constrained ) {
+                        return true;
+                    }
+                }
+                return false;
+            } 
+        }]);
     }
     
 });
@@ -459,7 +485,7 @@ Ext.define('CustomApp', {
 
         var array_of_days = Rally.technicalservices.util.Utilities.arrayOfDaysBetween(this.config.start_date,this.config.end_date,true);
         
-        promises = _.map(array_of_days,me._getSnapshots,this);
+        var promises = _.map(array_of_days,me._getSnapshots,this);
         promises.push(me._getValidFieldChoices(),this);
         
         Deft.Promise.all(promises).then({
@@ -484,26 +510,27 @@ Ext.define('CustomApp', {
         
         config.groups = [];
         
-        Rally.data.ModelFactory.getModel({
-            type: config.model_type,
-            success: function(model){
-                var field = model.getField(config.group_by_field_name);
-                this.logger.log("got field",field);
-                field.getAllowedValueStore().load({
-                    callback: function(values,operation,success) {
-                        me.logger.log("got values",values);
-                        Ext.Array.each(values, function(value){
-                            config.groups.push(value.get('StringValue'));
-                        });
-                        me.logger.log("converted to",config.groups);
-                        deferred.resolve("x");
-
-                    }
-                });
-                
-            },
-            scope: this
-        });
+        if ( config.group_by_field_type === "BOOLEAN" ) {
+            config.groups = ["true","false"];
+            deferred.resolve("x");
+        } else {
+            Rally.data.ModelFactory.getModel({
+                type: config.model_type,
+                success: function(model){
+                    var field = model.getField(config.group_by_field_name);
+                    field.getAllowedValueStore().load({
+                        callback: function(values,operation,success) {
+                            Ext.Array.each(values, function(value){
+                                config.groups.push(value.get('StringValue'));
+                            });
+                            deferred.resolve("x");
+                        }
+                    });
+                    
+                },
+                scope: this
+            });
+        }
         
         return deferred.promise;
     },
@@ -528,6 +555,7 @@ Ext.define('CustomApp', {
             listeners: {
                 load: function(store,snaps,success){
                     if (success) {
+                        console.log('snaps',snaps);
                         var day_calculator = Ext.create('TSDay',{
                             groupByFieldName:config.group_by_field_name,
                             JSDate: day

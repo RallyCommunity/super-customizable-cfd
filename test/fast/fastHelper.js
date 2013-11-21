@@ -49,6 +49,7 @@ Ext.define('mockSnap',{
     fields: [
         {name:'ObjectID',type:'int'},
         {name:'Project',type:'int'},
-        {name:'ScheduleState',type:'string'}
+        {name:'ScheduleState',type:'string'},
+        {name:'Blocked',type:'boolean'}
     ]
 });

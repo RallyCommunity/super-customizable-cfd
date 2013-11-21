@@ -52,4 +52,22 @@ describe("When making a TSDay model",function(){
         expect(day.getGroupTotal('Completed')).toEqual(2);
         expect(day.getGroupTotal('Defined')).toEqual(1);
     });
+    
+    it("should add snapshots when group by field is boolean",function(){
+        var day = Ext.create('TSDay',{
+            groupByFieldName:'Blocked'
+        });
+        
+        var snap1 = Ext.create('mockSnap',{ ObjectID:5, Project: 5, Blocked:true });
+        var snap2 = Ext.create('mockSnap',{ ObjectID:6, Project: 5, Blocked:true });
+        var snap3 = Ext.create('mockSnap',{ ObjectID:7, Project: 5, Blocked:false });
+        
+        day.addSnap(snap1);
+        day.addSnap(snap2);
+        day.addSnap(snap3);
+
+        expect(day.get('Total')).toEqual(3);
+        expect(day.getGroupTotal('true')).toEqual(2);
+        expect(day.getGroupTotal('false')).toEqual(1);
+    });
 });

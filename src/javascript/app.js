@@ -53,7 +53,7 @@ Ext.define('CustomApp', {
 
         var array_of_days = Rally.technicalservices.util.Utilities.arrayOfDaysBetween(this.config.start_date,this.config.end_date,true);
         
-        promises = _.map(array_of_days,me._getSnapshots,this);
+        var promises = _.map(array_of_days,me._getSnapshots,this);
         promises.push(me._getValidFieldChoices(),this);
         
         Deft.Promise.all(promises).then({
@@ -78,26 +78,27 @@ Ext.define('CustomApp', {
         
         config.groups = [];
         
-        Rally.data.ModelFactory.getModel({
-            type: config.model_type,
-            success: function(model){
-                var field = model.getField(config.group_by_field_name);
-                this.logger.log("got field",field);
-                field.getAllowedValueStore().load({
-                    callback: function(values,operation,success) {
-                        me.logger.log("got values",values);
-                        Ext.Array.each(values, function(value){
-                            config.groups.push(value.get('StringValue'));
-                        });
-                        me.logger.log("converted to",config.groups);
-                        deferred.resolve("x");
-
-                    }
-                });
-                
-            },
-            scope: this
-        });
+        if ( config.group_by_field_type === "BOOLEAN" ) {
+            config.groups = ["true","false"];
+            deferred.resolve("x");
+        } else {
+            Rally.data.ModelFactory.getModel({
+                type: config.model_type,
+                success: function(model){
+                    var field = model.getField(config.group_by_field_name);
+                    field.getAllowedValueStore().load({
+                        callback: function(values,operation,success) {
+                            Ext.Array.each(values, function(value){
+                                config.groups.push(value.get('StringValue'));
+                            });
+                            deferred.resolve("x");
+                        }
+                    });
+                    
+                },
+                scope: this
+            });
+        }
         
         return deferred.promise;
     },
@@ -122,6 +123,7 @@ Ext.define('CustomApp', {
             listeners: {
                 load: function(store,snaps,success){
                     if (success) {
+                        console.log('snaps',snaps);
                         var day_calculator = Ext.create('TSDay',{
                             groupByFieldName:config.group_by_field_name,
                             JSDate: day

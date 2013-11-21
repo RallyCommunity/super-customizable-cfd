@@ -31,7 +31,14 @@
         
         var snap_value = snap.get(group_by_field_name);
         
-        if ( snap_value ) {
+        if ( Ext.isDefined(snap_value) ) {
+            if ( Ext.isBoolean(snap_value) ) { 
+                if ( snap_value ) { 
+                    snap_value = "true"; 
+                } else { 
+                    snap_value = "false"; 
+                } 
+            }
             if ( ! this.group_totals[snap_value] ) { this.group_totals[snap_value] = 0; }
             this.group_totals[snap_value] = this.group_totals[snap_value] + 1;
         }

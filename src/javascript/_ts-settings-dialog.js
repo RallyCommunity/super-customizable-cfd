@@ -88,6 +88,7 @@ Ext.define('Rally.technicalservices.SettingsDialog',{
         }
         if ( this.down('#group_field_chooser') ) {
             config.group_by_field_name = this.down('#group_field_chooser').getValue();
+            config.group_by_field_type = this.down('#group_field_chooser').getRecord().get('fieldDefinition').attributeDefinition.AttributeType;
         }
         return config;
     },
@@ -126,12 +127,32 @@ Ext.define('Rally.technicalservices.SettingsDialog',{
         var me = this;
         
         this.down('#group_field_selector_box').removeAll();
-        this.down('#group_field_selector_box').add({
+        var cb = this.down('#group_field_selector_box').add({
             xtype:'rallyfieldcombobox',
             itemId: 'group_field_chooser',
             model: me.model_type,
             value: me.group_by_field_name
         });
+        var field_store = cb.getStore();
+        field_store.on('load',this._filterOutExceptChoices,this);
+
+    },
+    _filterOutExceptChoices: function(store,records) {
+        store.filter([{
+            filterFn:function(field){ 
+                var attribute_type = field.get('fieldDefinition').attributeDefinition.AttributeType;
+                if (  attribute_type == "BOOLEAN" ) {
+                    return true;
+                }
+                if ( attribute_type == "STRING" || attribute_type == "STATE" ) {
+                    if ( field.get('fieldDefinition').attributeDefinition.Constrained ) {
+                        return true;
+                    }
+                }
+                console.log(attribute_type,field);
+                return false;
+            } 
+        }]);
     }
     
 });
