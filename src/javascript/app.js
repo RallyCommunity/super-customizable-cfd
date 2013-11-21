@@ -33,7 +33,7 @@ Ext.define('CustomApp', {
         var config = this.config;
         
         this.dialog = Ext.create('Rally.technicalservices.SettingsDialog',{
-            model: config.model_type,
+            model_type: config.model_type,
             width: 200,
             group_by_field_name: config.group_by_field_name,
             listeners: {

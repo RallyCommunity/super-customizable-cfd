@@ -3,11 +3,11 @@
 <head>
     <title>Super Customizable Cumulative Flow Diagram</title>
     <!--  (c) 2013 Rally Software Development Corp.  All Rights Reserved. -->
-    <!--  Build Date: Wed Nov 20 2013 18:44:35 GMT-0800 (PST) -->
+    <!--  Build Date: Wed Nov 20 2013 18:46:46 GMT-0800 (PST) -->
     
     <script type="text/javascript">
-        var APP_BUILD_DATE = "Wed Nov 20 2013 18:44:35 GMT-0800 (PST)";
-        var CHECKSUM = 15008514942;
+        var APP_BUILD_DATE = "Wed Nov 20 2013 18:46:46 GMT-0800 (PST)";
+        var CHECKSUM = 15314010969;
     </script>
     
     <script type="text/javascript" src="/apps/2.0rc1/sdk.js"></script>
@@ -439,7 +439,7 @@ Ext.define('CustomApp', {
         var config = this.config;
         
         this.dialog = Ext.create('Rally.technicalservices.SettingsDialog',{
-            model: config.model_type,
+            model_type: config.model_type,
             width: 200,
             group_by_field_name: config.group_by_field_name,
             listeners: {
@@ -636,6 +636,16 @@ Ext.define('CustomApp', {
     }
 });
 
+/**
+ * the loading mask wasn't going away!
+ */
+
+Ext.override(Rally.ui.chart.Chart,{
+    onRender: function () {
+        this.callParent(arguments);
+        this._unmask();
+    }
+});
             
                Rally.launchApp('CustomApp', {
                    name: 'Super Customizable Cumulative Flow Diagram'
