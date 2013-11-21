@@ -121,6 +121,8 @@ Ext.define('Rally.technicalservices.SettingsDialog',{
             displayField: 'Name',
             valueField: 'Value',
             store: type_store,
+            fieldLabel: 'Artifact Type',
+            labelWidth: 75,
             value: me.model_type,
             listeners: {
                 scope: this,
@@ -142,7 +144,9 @@ Ext.define('Rally.technicalservices.SettingsDialog',{
             xtype:'rallyfieldcombobox',
             itemId: 'group_field_chooser',
             model: me.model_type,
-            value: me.group_by_field_name
+            value: me.group_by_field_name,
+            labelWidth: 75,
+            fieldLabel: 'Group By'
         });
         var field_store = cb.getStore();
         field_store.on({
@@ -166,7 +170,9 @@ Ext.define('Rally.technicalservices.SettingsDialog',{
             xtype:'rallyfieldcombobox',
             itemId: 'metric_chooser',
             model: me.model_type,
-            value: me.metric
+            value: me.metric,
+            labelWidth: 75,
+            fieldLabel: 'Measure'
         });
         var field_store = cb.getStore();
         field_store.on('load',this._filterOutExceptNumbers,this,true);

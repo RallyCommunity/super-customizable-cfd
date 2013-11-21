@@ -3,11 +3,11 @@
 <head>
     <title>Super Customizable Cumulative Flow Diagram</title>
     <!--  (c) 2013 Rally Software Development Corp.  All Rights Reserved. -->
-    <!--  Build Date: Thu Nov 21 2013 08:37:41 GMT-0800 (PST) -->
+    <!--  Build Date: Thu Nov 21 2013 08:53:54 GMT-0800 (PST) -->
     
     <script type="text/javascript">
-        var APP_BUILD_DATE = "Thu Nov 21 2013 08:37:41 GMT-0800 (PST)";
-        var CHECKSUM = 21790479192;
+        var APP_BUILD_DATE = "Thu Nov 21 2013 08:53:54 GMT-0800 (PST)";
+        var CHECKSUM = 22395952228;
     </script>
     
     <script type="text/javascript" src="/apps/2.0rc1/sdk.js"></script>
@@ -324,6 +324,8 @@ Ext.define('Rally.technicalservices.SettingsDialog',{
             displayField: 'Name',
             valueField: 'Value',
             store: type_store,
+            fieldLabel: 'Artifact Type',
+            labelWidth: 75,
             value: me.model_type,
             listeners: {
                 scope: this,
@@ -345,7 +347,9 @@ Ext.define('Rally.technicalservices.SettingsDialog',{
             xtype:'rallyfieldcombobox',
             itemId: 'group_field_chooser',
             model: me.model_type,
-            value: me.group_by_field_name
+            value: me.group_by_field_name,
+            labelWidth: 75,
+            fieldLabel: 'Group By'
         });
         var field_store = cb.getStore();
         field_store.on({
@@ -369,7 +373,9 @@ Ext.define('Rally.technicalservices.SettingsDialog',{
             xtype:'rallyfieldcombobox',
             itemId: 'metric_chooser',
             model: me.model_type,
-            value: me.metric
+            value: me.metric,
+            labelWidth: 75,
+            fieldLabel: 'Measure'
         });
         var field_store = cb.getStore();
         field_store.on('load',this._filterOutExceptNumbers,this,true);
@@ -532,7 +538,6 @@ Ext.define('CustomApp', {
         
         this.dialog = Ext.create('Rally.technicalservices.SettingsDialog',{
             model_type: config.model_type,
-            width: 200,
             group_by_field_name: config.group_by_field_name,
             metric: config.metric,
             listeners: {
@@ -684,6 +689,8 @@ Ext.define('CustomApp', {
     },
     _makeChart: function(days) {
         var me = this;
+        var config = this.config;
+        
         this.logger.log("_makeChart",days);
         
         this.down('#chart_box').removeAll();
@@ -708,7 +715,7 @@ Ext.define('CustomApp', {
                     type:'area'
                 },
                 title: {
-                    text: '',
+                    text: config.model_type + " grouped by " + config.group_by_field_name,
                     align: 'center'
                 },
                 xAxis: [
@@ -723,7 +730,11 @@ Ext.define('CustomApp', {
                         }
                     }
                 ],
-                yAxis: [{title:{text:''}}],
+                yAxis: [
+                    {title:
+                        {text:config.metric}
+                    }
+                ],
                 plotOptions: {
                     series: {
                         stacking: 'normal'

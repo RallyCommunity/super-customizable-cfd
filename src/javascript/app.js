@@ -34,7 +34,6 @@ Ext.define('CustomApp', {
         
         this.dialog = Ext.create('Rally.technicalservices.SettingsDialog',{
             model_type: config.model_type,
-            width: 200,
             group_by_field_name: config.group_by_field_name,
             metric: config.metric,
             listeners: {
@@ -186,6 +185,8 @@ Ext.define('CustomApp', {
     },
     _makeChart: function(days) {
         var me = this;
+        var config = this.config;
+        
         this.logger.log("_makeChart",days);
         
         this.down('#chart_box').removeAll();
@@ -210,7 +211,7 @@ Ext.define('CustomApp', {
                     type:'area'
                 },
                 title: {
-                    text: '',
+                    text: config.model_type + " grouped by " + config.group_by_field_name,
                     align: 'center'
                 },
                 xAxis: [
@@ -225,7 +226,11 @@ Ext.define('CustomApp', {
                         }
                     }
                 ],
-                yAxis: [{title:{text:''}}],
+                yAxis: [
+                    {title:
+                        {text:config.metric}
+                    }
+                ],
                 plotOptions: {
                     series: {
                         stacking: 'normal'
