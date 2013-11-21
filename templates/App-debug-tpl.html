@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title><%= name %></title>
+    <script type="text/javascript">
+        var APP_BUILD_DATE = "<%= new Date() %>";
+    </script>
+    
+    <script type="text/javascript" src="<%= server %>/apps/<%= sdk %>/sdk-debug.js"></script>
+
+    <script type="text/javascript">
+        Rally.onReady(function() {
+            Rally.loadScripts(<%= JSON.stringify(js_files) %>,
+	            function() {
+	                Rally.launchApp('<%= className %>', {
+	                    name: '<%= name %>'
+	                })
+	            }, true);
+        });
+    </script>
+<%
+    _.each( css_files, function(element) { 
+        print('<link rel="stylesheet" type="text/css" href="' + element + '">'); 
+     });
+    
+%>
+
+</head>
+<body></body>
+</html>

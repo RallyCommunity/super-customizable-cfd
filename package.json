@@ -1,0 +1,14 @@
+{
+  "_comment": "This file is used by grunt",
+  "name": "rally-health-app",
+  "version": "0.1.0",
+  "dependencies": {},
+  "devDependencies": {
+    "grunt": "~0.4.1",
+    "grunt-cli": "0.1.6",
+    "grunt-contrib-jasmine": "~0.5.2",
+    "grunt-webdriver-jasmine-runner": "git+ssh://git@github.com:RallySoftware/grunt-webdriver-jasmine-runner.git#v0.0.5",
+    "grunt-templater": "git://github.com/rockwood/grunt-templater.git",
+    "underscore": "1.4.4"
+  }
+}

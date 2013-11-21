@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Jasmine Spec Runner</title>
+
+    <script type="text/javascript">
+        // some global variables
+        var app_context = null;
+    </script>
+    
+    <script type="text/javascript" src="<%= options.server %>/apps/<%= options.sdk %>/sdk-debug.js"></script>
+    
+    <% with (scripts) { %>
+    <% [].concat(jasmine, vendor, reporters).forEach(function(script){ %>
+    <script src="<%= script %>"></script>
+    <% }) %>
+    <% }; %>
+    
+    <% with (scripts) { %>
+    <% [].concat(helpers, specs).forEach(function(script){ %>
+    <script src="<%= script %>"></script>
+    <% }) %>
+    <% }; %>
+    
+        
+    <script type="text/javascript">
+        //Redefine onReady - bug in phantomjs such that onload isn't triggered for <link>, so the default Rally onReady won't work consistently
+        Rally.sdk.Bootstrapper.onReady = function (onready) {
+            if (!Rally.environment) {
+                Ext.create('Rally.sdk.env.Global').setup();
+            }
+            onready();
+        };
+                
+        Rally.onReady(function () {
+            Rally.loadScripts(<%= JSON.stringify(options.js_files) %>,
+            function() {
+                
+                var jasmineEnv = jasmine.getEnv();
+
+                jasmineEnv.updateInterval = 1000;
+                var htmlReporter = new jasmine.HtmlReporter();
+                jasmineEnv.addReporter(htmlReporter);
+
+                jasmineEnv.specFilter = function (spec) {
+                    return htmlReporter.specFilter(spec);
+                };
+
+                jasmineEnv.execute();
+            }, true);
+        });
+        
+    </script>
+    <link rel="stylesheet" type="text/css" href="src/style/app.css">
+    
+    <link rel="stylesheet" type="text/css" href=".grunt/grunt-contrib-jasmine/jasmine.css">
+</head>
+<body></body>
+</html>
