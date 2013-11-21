@@ -3,11 +3,11 @@
 <head>
     <title>Super Customizable Cumulative Flow Diagram</title>
     <!--  (c) 2013 Rally Software Development Corp.  All Rights Reserved. -->
-    <!--  Build Date: Wed Nov 20 2013 16:15:06 GMT-0800 (PST) -->
+    <!--  Build Date: Wed Nov 20 2013 18:44:35 GMT-0800 (PST) -->
     
     <script type="text/javascript">
-        var APP_BUILD_DATE = "Wed Nov 20 2013 16:15:06 GMT-0800 (PST)";
-        var CHECKSUM = 4939433474;
+        var APP_BUILD_DATE = "Wed Nov 20 2013 18:44:35 GMT-0800 (PST)";
+        var CHECKSUM = 15008514942;
     </script>
     
     <script type="text/javascript" src="/apps/2.0rc1/sdk.js"></script>
@@ -27,7 +27,7 @@
     extend: 'Ext.data.Model',
     group_totals: {},
     fields: [
-        {name:'JSDate',type:'date'},
+        {name:'JSDate',type:'date',defaultValue:new Date()},
         {name:'groupByFieldName',type:'string',defaultValue:'ScheduleState'}, /* the name of the field that filters what we count */
         {name:'Total',type:'number',defaultVale:0}
     ],
@@ -184,6 +184,143 @@ Ext.define('Rally.technicalservices.Logger',{
 
 });
 
+Ext.define('Rally.technicalservices.SettingsDialog',{
+    extend: 'Rally.ui.dialog.Dialog',
+    alias: 'widget.tssettingsdialog',
+    config: {
+        title: 'Settings',
+        model_type: 'HierarchicalRequirement',
+        group_by_field_name: 'Schedulestate'
+    },
+    items: {
+        xtype: 'panel',
+        border: false,
+        defaults: {
+            padding: 5,
+            margin: 5
+        },
+        items: [
+            {
+                xtype: 'container',
+                itemId: 'model_selector_box'
+            },
+            {
+                xtype:'container',
+                itemId: 'group_field_selector_box'
+            }
+        ]
+    },
+    constructor: function(config){
+        this.mergeConfig(config);
+        this.callParent([this.config]);
+        
+    },
+    initComponent: function() {
+        this.callParent(arguments);
+        this.addEvents(
+            /**
+             * @event settingsChosen
+             * Fires when user clicks done after making settings choices
+             * @param {Rally.technicalservices.SettingsDialog} this
+             * @param {hash} config settings
+             */
+            'settingsChosen',
+            /**
+             * @event cancelChosen
+             * Fires when user clicks the cancel button
+             */
+            'cancelChosen'
+        );
+        this._buildButtons();
+        this._addChoosers();
+    },
+    _buildButtons: function() {
+        this.down('panel').addDocked({
+            xtype: 'toolbar',
+            dock: 'bottom',
+            padding: '0 0 10 0',
+            layout: {
+                type: 'hbox',
+                pack: 'center'
+            },
+            ui: 'footer',
+            items: [
+                {
+                    xtype: 'rallybutton',
+                    text: 'Run',
+                    scope: this,
+                    userAction: 'clicked done in dialog',
+                    handler: function() {
+                        this.fireEvent('settingsChosen', this, this._getConfig());
+                        this.close();
+                    }
+                },
+                {
+                    xtype: 'rallybutton',
+                    text: 'Cancel',
+                    handler: function() {
+                        this.fireEvent('cancelChosen');
+                        this.close()
+                    },
+                    scope: this
+                }
+            ]
+        });
+    },
+    _getConfig: function() {
+        var config = {};
+        if ( this.down('#model_chooser') ) {
+            config.model_type = this.down('#model_chooser').getValue();
+        }
+        if ( this.down('#group_field_chooser') ) {
+            config.group_by_field_name = this.down('#group_field_chooser').getValue();
+        }
+        return config;
+    },
+    _addChoosers: function() {
+        var me = this;
+        this._addModelChooser();
+        this._addGroupChooser();
+    },
+    _addModelChooser: function() {
+        var me = this;
+        var type_store = Ext.create('Rally.data.custom.Store',{
+            data: [
+                {Name:'HierarchicalRequirement',Value:'HierarchicalRequirement'},
+                {Name:'Defect',Value:'Defect'},
+                {Name:'Task',Value:'Task'}
+            ]
+        });
+        this.down('#model_selector_box').add({
+            xtype:'rallycombobox',
+            itemId: 'model_chooser',
+            displayField: 'Name',
+            valueField: 'Value',
+            store: type_store,
+            value: me.model_type,
+            listeners: {
+                scope: this,
+                change: function(cb,new_value){
+                    this.model_type = new_value;
+                    this.group_by_field_name = null;
+                    this._addGroupChooser();
+                }
+            }
+        });
+    },
+    _addGroupChooser: function() {
+        var me = this;
+        
+        this.down('#group_field_selector_box').removeAll();
+        this.down('#group_field_selector_box').add({
+            xtype:'rallyfieldcombobox',
+            itemId: 'group_field_chooser',
+            model: me.model_type,
+            value: me.group_by_field_name
+        });
+    }
+    
+});
 Ext.define('Rally.technicalservices.util.Utilities', {
     singleton: true,
     hashToArray: function(hash) {
@@ -276,31 +413,99 @@ Ext.define('CustomApp', {
         start_date: Rally.util.DateTime.add(new Date(),"month",-1),
         end_date: new Date(),
         group_by_field_name: 'ScheduleState',
-        metric: 'count'
+        metric: 'count',
+        groups:[]
     },
     logger: new Rally.technicalservices.Logger(),
     items: [
-        {xtype:'container',itemId:'selector_box'},
-        {xtype:'container',itemId:'chart_box'},
+        {xtype:'container',itemId:'selector_box', margin: 5, padding: 5},
+        {xtype:'container',itemId:'chart_box', margin: 5, padding: 5},
         {xtype:'tsinfolink'}
     ],
     launch: function() {
-        var me = this;
         this.logger.log("Launched with context", this.getContext(), "and config", this.config);
+        this.down('#selector_box').add({
+            xtype:'rallybutton',
+            text:'Settings',
+            handler: function() {
+                this._showSettingsDialog();
+            },
+            scope: this
+            
+        });
+    },
+    _showSettingsDialog: function() {
+        if ( this.dialog ) { this.dialog.destroy(); }
+        var config = this.config;
         
+        this.dialog = Ext.create('Rally.technicalservices.SettingsDialog',{
+            model: config.model_type,
+            width: 200,
+            group_by_field_name: config.group_by_field_name,
+            listeners: {
+                settingsChosen: function(dialog,returned_config) {
+                    this.config = Ext.Object.merge(this.config,returned_config);
+                    this.logger.log("new config",this.config);
+                    this._reCalculate();
+                },
+                scope: this
+            }
+        });
+        this.dialog.show();
+    },
+    _reCalculate:function() {
+        var me = this;
+        this.down('#chart_box').removeAll();
+
         var array_of_days = Rally.technicalservices.util.Utilities.arrayOfDaysBetween(this.config.start_date,this.config.end_date,true);
         
         promises = _.map(array_of_days,me._getSnapshots,this);
+        promises.push(me._getValidFieldChoices(),this);
+        
         Deft.Promise.all(promises).then({
-            success: function(records) {
-                // got back an array of days
-                console.log(records);
+            success: function(days) {
+                // got back an array of calculated data for each day (tsday model) (plus the null back from the other call)
+                
+                days.pop();
+                days.pop();
+                me._makeChart(days);
             }, 
             failure: function(records) {
                 console.log("oops");
             }
         });
         
+    },
+    _getValidFieldChoices: function() {
+        this.logger.log("_getValidFieldChoices");
+        var deferred = Ext.create('Deft.Deferred');
+        var config = this.config;
+        var me = this;
+        
+        config.groups = [];
+        
+        Rally.data.ModelFactory.getModel({
+            type: config.model_type,
+            success: function(model){
+                var field = model.getField(config.group_by_field_name);
+                this.logger.log("got field",field);
+                field.getAllowedValueStore().load({
+                    callback: function(values,operation,success) {
+                        me.logger.log("got values",values);
+                        Ext.Array.each(values, function(value){
+                            config.groups.push(value.get('StringValue'));
+                        });
+                        me.logger.log("converted to",config.groups);
+                        deferred.resolve("x");
+
+                    }
+                });
+                
+            },
+            scope: this
+        });
+        
+        return deferred.promise;
     },
     _getSnapshots:function(day){
         var config = this.config;
@@ -322,16 +527,15 @@ Ext.define('CustomApp', {
             hydrate: [config.group_by_field_name],
             listeners: {
                 load: function(store,snaps,success){
-
                     if (success) {
-                        var day = Ext.create('TSDay',{
+                        var day_calculator = Ext.create('TSDay',{
                             groupByFieldName:config.group_by_field_name,
                             JSDate: day
                         });
                         Ext.Array.each(snaps, function(snap){
-                            day.addSnap(snap);
+                            day_calculator.addSnap(snap);
                         });
-                        deferred.resolve(day);
+                        deferred.resolve(day_calculator);
                     } else {
                         deferred.reject("Error Loading Snapshots for " + day);
                     }
@@ -340,6 +544,95 @@ Ext.define('CustomApp', {
             }
         });
         return deferred.promise;
+    },
+    _getCategories: function(days) {
+        var me = this;
+        this.logger.log("_getCategories");
+        var categories = [];
+        Ext.Array.each(days,function(day){
+            me.logger.log("day",day);
+            categories.push(day.get('JSDate'));
+        });
+        return categories;
+    },
+    _getSeries: function(days){
+        this.logger.log("_getSeries");
+        var group_data = {};
+        var series = [];
+        
+        var groups = this.config.groups;
+        Ext.Array.each(groups, function(group){
+            group_data[group] = [];
+        });
+        
+        Ext.Array.each(days, function(day){
+            if ( day ) {
+                Ext.Array.each(groups,function(group_name){
+                    var group_value = day.getGroupTotal(group_name);
+                    group_data[group_name].push(group_value);
+                });
+            }
+        });
+        
+        Ext.Array.each(groups,function(group_name){
+            series.push({
+                type:'area',
+                name: group_name,
+                data: group_data[group_name]
+            });
+        });
+        
+        return series;
+    },
+    _makeChart: function(days) {
+        var me = this;
+        this.logger.log("_makeChart",days);
+        
+        this.down('#chart_box').removeAll();
+        
+        var categories = this._getCategories(days);
+        var series = this._getSeries(days);
+        
+        this.logger.log('categories',categories);
+        this.logger.log('series',series);
+        
+        this.down('#chart_box').add({
+            xtype:'rallychart',
+            chartData: {
+                series: series,
+                categories: categories
+            },
+            chartConfig: {
+                chart: { 
+                    width: me.getWidth(),
+                    type:'area'
+                },
+                title: {
+                    text: '',
+                    align: 'center'
+                },
+                xAxis: [
+                    {
+                        categories: categories,
+                        labels: {
+                            align: 'left',
+                            rotation: 70,
+                            formatter: function() {
+                                return Ext.Date.format(this.value,'d-M');
+                            }
+                        }
+                    }
+                ],
+                yAxis: [{title:{text:''}}],
+                plotOptions: {
+                    series: {
+                        stacking: 'normal'
+                    }
+                }
+            }
+            
+        });
+        
     }
 });
 

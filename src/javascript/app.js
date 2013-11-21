@@ -12,17 +12,45 @@ Ext.define('CustomApp', {
     },
     logger: new Rally.technicalservices.Logger(),
     items: [
-        {xtype:'container',itemId:'selector_box'},
-        {xtype:'container',itemId:'chart_box'},
+        {xtype:'container',itemId:'selector_box', margin: 5, padding: 5},
+        {xtype:'container',itemId:'chart_box', margin: 5, padding: 5},
         {xtype:'tsinfolink'}
     ],
     launch: function() {
         this.logger.log("Launched with context", this.getContext(), "and config", this.config);
+        this.down('#selector_box').add({
+            xtype:'rallybutton',
+            text:'Settings',
+            handler: function() {
+                this._showSettingsDialog();
+            },
+            scope: this
+            
+        });
+    },
+    _showSettingsDialog: function() {
+        if ( this.dialog ) { this.dialog.destroy(); }
+        var config = this.config;
         
-        this._reCalculate();
+        this.dialog = Ext.create('Rally.technicalservices.SettingsDialog',{
+            model: config.model_type,
+            width: 200,
+            group_by_field_name: config.group_by_field_name,
+            listeners: {
+                settingsChosen: function(dialog,returned_config) {
+                    this.config = Ext.Object.merge(this.config,returned_config);
+                    this.logger.log("new config",this.config);
+                    this._reCalculate();
+                },
+                scope: this
+            }
+        });
+        this.dialog.show();
     },
     _reCalculate:function() {
         var me = this;
+        this.down('#chart_box').removeAll();
+
         var array_of_days = Rally.technicalservices.util.Utilities.arrayOfDaysBetween(this.config.start_date,this.config.end_date,true);
         
         promises = _.map(array_of_days,me._getSnapshots,this);
@@ -189,7 +217,12 @@ Ext.define('CustomApp', {
                         }
                     }
                 ],
-                yAxis: [{title:{text:''}}]
+                yAxis: [{title:{text:''}}],
+                plotOptions: {
+                    series: {
+                        stacking: 'normal'
+                    }
+                }
             }
             
         });
