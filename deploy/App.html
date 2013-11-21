@@ -3,11 +3,11 @@
 <head>
     <title>Super Customizable Cumulative Flow Diagram</title>
     <!--  (c) 2013 Rally Software Development Corp.  All Rights Reserved. -->
-    <!--  Build Date: Wed Nov 20 2013 20:09:48 GMT-0800 (PST) -->
+    <!--  Build Date: Wed Nov 20 2013 20:16:16 GMT-0800 (PST) -->
     
     <script type="text/javascript">
-        var APP_BUILD_DATE = "Wed Nov 20 2013 20:09:48 GMT-0800 (PST)";
-        var CHECKSUM = 17105448983;
+        var APP_BUILD_DATE = "Wed Nov 20 2013 20:16:16 GMT-0800 (PST)";
+        var CHECKSUM = 17236901336;
     </script>
     
     <script type="text/javascript" src="/apps/2.0rc1/sdk.js"></script>
@@ -333,14 +333,16 @@ Ext.define('Rally.technicalservices.SettingsDialog',{
     _filterOutExceptChoices: function(store,records) {
         store.filter([{
             filterFn:function(field){ 
-                if ( field.get('fieldDefinition').attributeDefinition.AttributeType == "BOOLEAN" ) {
+                var attribute_type = field.get('fieldDefinition').attributeDefinition.AttributeType;
+                if (  attribute_type == "BOOLEAN" ) {
                     return true;
                 }
-                if ( field.get('fieldDefinition').attributeDefinition.AttributeType == "STRING" ) {
+                if ( attribute_type == "STRING" || attribute_type == "STATE" ) {
                     if ( field.get('fieldDefinition').attributeDefinition.Constrained ) {
                         return true;
                     }
                 }
+                console.log(attribute_type,field);
                 return false;
             } 
         }]);
