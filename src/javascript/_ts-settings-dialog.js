@@ -4,7 +4,8 @@ Ext.define('Rally.technicalservices.SettingsDialog',{
     config: {
         title: 'Settings',
         model_type: 'HierarchicalRequirement',
-        group_by_field_name: 'Schedulestate'
+        group_by_field_name: 'Schedulestate',
+        metric: 'Count'
     },
     items: {
         xtype: 'panel',
@@ -21,6 +22,10 @@ Ext.define('Rally.technicalservices.SettingsDialog',{
             {
                 xtype:'container',
                 itemId: 'group_field_selector_box'
+            },
+            {
+                xtype:'container',
+                itemId: 'metric_selector_box'
             }
         ]
     },
@@ -90,12 +95,16 @@ Ext.define('Rally.technicalservices.SettingsDialog',{
             config.group_by_field_name = this.down('#group_field_chooser').getValue();
             config.group_by_field_type = this.down('#group_field_chooser').getRecord().get('fieldDefinition').attributeDefinition.AttributeType;
         }
+        if ( this.down('#metric_chooser') ) {
+            config.metric = this.down('#metric_chooser').getValue();
+        }
         return config;
     },
     _addChoosers: function() {
         var me = this;
         this._addModelChooser();
         this._addGroupChooser();
+        this._addMetricChooser();
     },
     _addModelChooser: function() {
         var me = this;
@@ -118,7 +127,9 @@ Ext.define('Rally.technicalservices.SettingsDialog',{
                 change: function(cb,new_value){
                     this.model_type = new_value;
                     this.group_by_field_name = null;
+                    this.metric = null;
                     this._addGroupChooser();
+                    this._addMetricChooser();
                 }
             }
         });
@@ -137,6 +148,28 @@ Ext.define('Rally.technicalservices.SettingsDialog',{
         field_store.on('load',this._filterOutExceptChoices,this);
 
     },
+    _addMetricChooser: function() {
+        var me = this;
+        
+        this.down('#metric_selector_box').removeAll();
+        var cb = this.down('#metric_selector_box').add({
+            xtype:'rallyfieldcombobox',
+            itemId: 'metric_chooser',
+            model: me.model_type,
+            value: me.metric
+        });
+        var field_store = cb.getStore();
+        field_store.on('load',this._filterOutExceptNumbers,this,true);
+        field_store.on({
+            'load':{
+                fn: function() { 
+                    field_store.add({name:'Count',value:'Count',fieldDefinition:{}});
+                    cb.setValue(me.metric);
+                },
+                single: true
+            }
+        });
+    },
     _filterOutExceptChoices: function(store,records) {
         store.filter([{
             filterFn:function(field){ 
@@ -149,7 +182,18 @@ Ext.define('Rally.technicalservices.SettingsDialog',{
                         return true;
                     }
                 }
-                console.log(attribute_type,field);
+                return false;
+            } 
+        }]);
+    },
+    _filterOutExceptNumbers: function(store,records) {
+        store.filter([{
+            filterFn:function(field){ 
+                var attribute_type = field.get('fieldDefinition').attributeDefinition.AttributeType;
+                if (  attribute_type == "QUANTITY" || attribute_type == "INTEGER" || attribute_type == "DECIMAL" ) {
+                    return true;
+                }
+                if ( field.get('name') == 'Count' ) { return true; }
                 return false;
             } 
         }]);

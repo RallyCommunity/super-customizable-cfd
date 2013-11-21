@@ -7,7 +7,7 @@ Ext.define('CustomApp', {
         start_date: Rally.util.DateTime.add(new Date(),"month",-1),
         end_date: new Date(),
         group_by_field_name: 'ScheduleState',
-        metric: 'count',
+        metric: 'Count',
         groups:[]
     },
     logger: new Rally.technicalservices.Logger(),
@@ -36,6 +36,7 @@ Ext.define('CustomApp', {
             model_type: config.model_type,
             width: 200,
             group_by_field_name: config.group_by_field_name,
+            metric: config.metric,
             listeners: {
                 settingsChosen: function(dialog,returned_config) {
                     this.config = Ext.Object.merge(this.config,returned_config);
@@ -112,7 +113,7 @@ Ext.define('CustomApp', {
         
         var date_array = 
         Ext.create('Rally.data.lookback.SnapshotStore',{
-            fetch: [config.group_by_field_name],
+            fetch: [config.group_by_field_name, config.metric],
             autoLoad: true,
             filters: [
                 {property:'_TypeHierarchy',value:config.model_type},
@@ -123,8 +124,9 @@ Ext.define('CustomApp', {
             listeners: {
                 load: function(store,snaps,success){
                     if (success) {
-                        console.log('snaps',snaps);
+                        this.logger.log("snaps",snaps);
                         var day_calculator = Ext.create('TSDay',{
+                            metricFieldName: config.metric,
                             groupByFieldName:config.group_by_field_name,
                             JSDate: day
                         });
@@ -146,7 +148,6 @@ Ext.define('CustomApp', {
         this.logger.log("_getCategories");
         var categories = [];
         Ext.Array.each(days,function(day){
-            me.logger.log("day",day);
             categories.push(day.get('JSDate'));
         });
         return categories;

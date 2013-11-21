@@ -3,11 +3,11 @@
 <head>
     <title>Super Customizable Cumulative Flow Diagram</title>
     <!--  (c) 2013 Rally Software Development Corp.  All Rights Reserved. -->
-    <!--  Build Date: Wed Nov 20 2013 20:16:16 GMT-0800 (PST) -->
+    <!--  Build Date: Wed Nov 20 2013 21:07:40 GMT-0800 (PST) -->
     
     <script type="text/javascript">
-        var APP_BUILD_DATE = "Wed Nov 20 2013 20:16:16 GMT-0800 (PST)";
-        var CHECKSUM = 17236901336;
+        var APP_BUILD_DATE = "Wed Nov 20 2013 21:07:40 GMT-0800 (PST)";
+        var CHECKSUM = 20754221133;
     </script>
     
     <script type="text/javascript" src="/apps/2.0rc1/sdk.js"></script>
@@ -29,6 +29,7 @@
     fields: [
         {name:'JSDate',type:'date',defaultValue:new Date()},
         {name:'groupByFieldName',type:'string',defaultValue:'ScheduleState'}, /* the name of the field that filters what we count */
+        {name:'metricFieldName',type:'string',defaultValue:'Count'}, /* the name of the field with a value to add (or count), remember the c_! */
         {name:'Total',type:'number',defaultVale:0}
     ],
     constructor: function(data) {
@@ -42,8 +43,17 @@
     addSnap: function(snap){
         var total = this.get('Total');
         var group_by_field_name = this.get('groupByFieldName');
+        var metric_field_name = this.get('metricFieldName');
         
-        total = total + 1;
+        var value_in_snap = 0;
+        if ( metric_field_name === "Count" ) {
+            value_in_snap = 1;
+        } else {
+            if (Ext.isNumber(snap.get(metric_field_name))) {
+                value_in_snap = snap.get(metric_field_name);
+            }
+        }
+        total = total + value_in_snap;
         this.set('Total',total);
         
         var snap_value = snap.get(group_by_field_name);
@@ -57,7 +67,7 @@
                 } 
             }
             if ( ! this.group_totals[snap_value] ) { this.group_totals[snap_value] = 0; }
-            this.group_totals[snap_value] = this.group_totals[snap_value] + 1;
+            this.group_totals[snap_value] = this.group_totals[snap_value] + value_in_snap;
         }
     },
     /**
@@ -197,7 +207,8 @@ Ext.define('Rally.technicalservices.SettingsDialog',{
     config: {
         title: 'Settings',
         model_type: 'HierarchicalRequirement',
-        group_by_field_name: 'Schedulestate'
+        group_by_field_name: 'Schedulestate',
+        metric: 'Count'
     },
     items: {
         xtype: 'panel',
@@ -214,6 +225,10 @@ Ext.define('Rally.technicalservices.SettingsDialog',{
             {
                 xtype:'container',
                 itemId: 'group_field_selector_box'
+            },
+            {
+                xtype:'container',
+                itemId: 'metric_selector_box'
             }
         ]
     },
@@ -283,12 +298,16 @@ Ext.define('Rally.technicalservices.SettingsDialog',{
             config.group_by_field_name = this.down('#group_field_chooser').getValue();
             config.group_by_field_type = this.down('#group_field_chooser').getRecord().get('fieldDefinition').attributeDefinition.AttributeType;
         }
+        if ( this.down('#metric_chooser') ) {
+            config.metric = this.down('#metric_chooser').getValue();
+        }
         return config;
     },
     _addChoosers: function() {
         var me = this;
         this._addModelChooser();
         this._addGroupChooser();
+        this._addMetricChooser();
     },
     _addModelChooser: function() {
         var me = this;
@@ -311,7 +330,9 @@ Ext.define('Rally.technicalservices.SettingsDialog',{
                 change: function(cb,new_value){
                     this.model_type = new_value;
                     this.group_by_field_name = null;
+                    this.metric = null;
                     this._addGroupChooser();
+                    this._addMetricChooser();
                 }
             }
         });
@@ -330,6 +351,28 @@ Ext.define('Rally.technicalservices.SettingsDialog',{
         field_store.on('load',this._filterOutExceptChoices,this);
 
     },
+    _addMetricChooser: function() {
+        var me = this;
+        
+        this.down('#metric_selector_box').removeAll();
+        var cb = this.down('#metric_selector_box').add({
+            xtype:'rallyfieldcombobox',
+            itemId: 'metric_chooser',
+            model: me.model_type,
+            value: me.metric
+        });
+        var field_store = cb.getStore();
+        field_store.on('load',this._filterOutExceptNumbers,this,true);
+        field_store.on({
+            'load':{
+                fn: function() { 
+                    field_store.add({name:'Count',value:'Count',fieldDefinition:{}});
+                    cb.setValue(me.metric);
+                },
+                single: true
+            }
+        });
+    },
     _filterOutExceptChoices: function(store,records) {
         store.filter([{
             filterFn:function(field){ 
@@ -342,7 +385,18 @@ Ext.define('Rally.technicalservices.SettingsDialog',{
                         return true;
                     }
                 }
-                console.log(attribute_type,field);
+                return false;
+            } 
+        }]);
+    },
+    _filterOutExceptNumbers: function(store,records) {
+        store.filter([{
+            filterFn:function(field){ 
+                var attribute_type = field.get('fieldDefinition').attributeDefinition.AttributeType;
+                if (  attribute_type == "QUANTITY" || attribute_type == "INTEGER" || attribute_type == "DECIMAL" ) {
+                    return true;
+                }
+                if ( field.get('name') == 'Count' ) { return true; }
                 return false;
             } 
         }]);
@@ -441,7 +495,7 @@ Ext.define('CustomApp', {
         start_date: Rally.util.DateTime.add(new Date(),"month",-1),
         end_date: new Date(),
         group_by_field_name: 'ScheduleState',
-        metric: 'count',
+        metric: 'Count',
         groups:[]
     },
     logger: new Rally.technicalservices.Logger(),
@@ -470,6 +524,7 @@ Ext.define('CustomApp', {
             model_type: config.model_type,
             width: 200,
             group_by_field_name: config.group_by_field_name,
+            metric: config.metric,
             listeners: {
                 settingsChosen: function(dialog,returned_config) {
                     this.config = Ext.Object.merge(this.config,returned_config);
@@ -546,7 +601,7 @@ Ext.define('CustomApp', {
         
         var date_array = 
         Ext.create('Rally.data.lookback.SnapshotStore',{
-            fetch: [config.group_by_field_name],
+            fetch: [config.group_by_field_name, config.metric],
             autoLoad: true,
             filters: [
                 {property:'_TypeHierarchy',value:config.model_type},
@@ -557,8 +612,9 @@ Ext.define('CustomApp', {
             listeners: {
                 load: function(store,snaps,success){
                     if (success) {
-                        console.log('snaps',snaps);
+                        this.logger.log("snaps",snaps);
                         var day_calculator = Ext.create('TSDay',{
+                            metricFieldName: config.metric,
                             groupByFieldName:config.group_by_field_name,
                             JSDate: day
                         });
@@ -580,7 +636,6 @@ Ext.define('CustomApp', {
         this.logger.log("_getCategories");
         var categories = [];
         Ext.Array.each(days,function(day){
-            me.logger.log("day",day);
             categories.push(day.get('JSDate'));
         });
         return categories;
