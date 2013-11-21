@@ -3,11 +3,11 @@
 <head>
     <title>Super Customizable Cumulative Flow Diagram</title>
     <!--  (c) 2013 Rally Software Development Corp.  All Rights Reserved. -->
-    <!--  Build Date: Thu Nov 21 2013 12:15:43 GMT-0800 (PST) -->
+    <!--  Build Date: Thu Nov 21 2013 12:39:02 GMT-0800 (PST) -->
     
     <script type="text/javascript">
-        var APP_BUILD_DATE = "Thu Nov 21 2013 12:15:43 GMT-0800 (PST)";
-        var CHECKSUM = 39142319428;
+        var APP_BUILD_DATE = "Thu Nov 21 2013 12:39:02 GMT-0800 (PST)";
+        var CHECKSUM = 39802009196;
     </script>
     
     <script type="text/javascript" src="/apps/2.0rc1/sdk.js"></script>
@@ -730,7 +730,8 @@ Ext.define('CustomApp', {
     },
     _limitRecordsByQuery: function(model,query_string) {
         this.logger.log("_limitRecordsByQuery");
-        
+        this.getEl().mask("Loading Filter Data");
+
         var deferred = Ext.create('Deft.Deferred');
         
         var filter = Ext.create('TSStringFilter',{query_string:query_string});
@@ -771,7 +772,8 @@ Ext.define('CustomApp', {
     },
     _recalculateLookBack: function(limit_to_oids) {
         var me = this;
-        
+        this.getEl().mask("Loading Historical Data");
+
         var config = this.config;
                 
         var array_of_days = Rally.technicalservices.util.Utilities.arrayOfDaysBetween(config.start_date,config.end_date,true,config.day_to_week_switch_point);
@@ -963,7 +965,9 @@ Ext.define('CustomApp', {
             }
             
         });
-        
+        if (this.config.query_string) {
+            this.down('#chart_box').add({xtype:'container', html:'Filterd by: ' + this.config.query_string});
+        }
     }
 });
 

@@ -122,7 +122,8 @@ Ext.define('CustomApp', {
     },
     _limitRecordsByQuery: function(model,query_string) {
         this.logger.log("_limitRecordsByQuery");
-        
+        this.getEl().mask("Loading Filter Data");
+
         var deferred = Ext.create('Deft.Deferred');
         
         var filter = Ext.create('TSStringFilter',{query_string:query_string});
@@ -163,7 +164,8 @@ Ext.define('CustomApp', {
     },
     _recalculateLookBack: function(limit_to_oids) {
         var me = this;
-        
+        this.getEl().mask("Loading Historical Data");
+
         var config = this.config;
                 
         var array_of_days = Rally.technicalservices.util.Utilities.arrayOfDaysBetween(config.start_date,config.end_date,true,config.day_to_week_switch_point);
@@ -355,6 +357,8 @@ Ext.define('CustomApp', {
             }
             
         });
-        
+        if (this.config.query_string) {
+            this.down('#chart_box').add({xtype:'container', html:'Filterd by: ' + this.config.query_string});
+        }
     }
 });
