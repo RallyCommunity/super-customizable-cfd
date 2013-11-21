@@ -3,11 +3,11 @@
 <head>
     <title>Super Customizable Cumulative Flow Diagram</title>
     <!--  (c) 2013 Rally Software Development Corp.  All Rights Reserved. -->
-    <!--  Build Date: Wed Nov 20 2013 21:20:46 GMT-0800 (PST) -->
+    <!--  Build Date: Wed Nov 20 2013 21:23:18 GMT-0800 (PST) -->
     
     <script type="text/javascript">
-        var APP_BUILD_DATE = "Wed Nov 20 2013 21:20:46 GMT-0800 (PST)";
-        var CHECKSUM = 21453674958;
+        var APP_BUILD_DATE = "Wed Nov 20 2013 21:23:18 GMT-0800 (PST)";
+        var CHECKSUM = 21663123924;
     </script>
     
     <script type="text/javascript" src="/apps/2.0rc1/sdk.js"></script>
@@ -512,7 +512,7 @@ Ext.define('CustomApp', {
     items: [
         {xtype:'container',itemId:'selector_box', margin: 5, padding: 5},
         {xtype:'container',itemId:'chart_box', margin: 5, padding: 5},
-        {xtype:'tsinfolink'}
+        {xtype:'tsinfolink',informationHtml:"<strong>Super-Customizable CFD</strong><p/>Start by pushing the Settings button"}
     ],
     launch: function() {
         this.logger.log("Launched with context", this.getContext(), "and config", this.config);

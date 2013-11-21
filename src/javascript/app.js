@@ -14,7 +14,7 @@ Ext.define('CustomApp', {
     items: [
         {xtype:'container',itemId:'selector_box', margin: 5, padding: 5},
         {xtype:'container',itemId:'chart_box', margin: 5, padding: 5},
-        {xtype:'tsinfolink'}
+        {xtype:'tsinfolink',informationHtml:"<strong>Super-Customizable CFD</strong><p/>Start by pushing the Settings button"}
     ],
     launch: function() {
         this.logger.log("Launched with context", this.getContext(), "and config", this.config);
