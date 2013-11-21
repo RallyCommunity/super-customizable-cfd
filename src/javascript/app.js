@@ -23,15 +23,51 @@ Ext.define('CustomApp', {
     ],
     launch: function() {
         this.logger.log("Launched with context", this.getContext(), "and config", this.config);
-        this.down('#selector_box').add({
-            xtype:'rallybutton',
-            text:'Settings',
-            handler: function() {
-                this._showSettingsDialog();
+        var me = this;
+        
+        this._getPITypes().then({
+            success: function(pi_types) {
+                me.down('#selector_box').add({
+                    xtype:'rallybutton',
+                    text:'Settings',
+                    handler: function() {
+                        me._showSettingsDialog();
+                    },
+                    scope: me
+                    
+                });
             },
-            scope: this
-            
+            failure: function(error) {
+                alert(error);
+            }
         });
+    },
+    _getPITypes: function() {
+        var me = this;
+        var deferred = Ext.create('Deft.Deferred');
+        Ext.create('Rally.data.WsapiDataStore',{
+            model: 'TypeDefinition',
+            filters: [{property:'TypePath',operator:'contains',value:'PortfolioItem/'}],
+            autoLoad: true,
+            listeners: {
+                load: function(store,types) {
+                    me.config.artifact_types = [
+                        {Name:'HierarchicalRequirement',Value:'HierarchicalRequirement'},
+                        {Name:'Defect',Value:'Defect'},
+                        {Name:'Task',Value:'Task'}
+                    ];
+                    
+                    Ext.Array.each(types, function(type){
+                        me.config.artifact_types.push({
+                            Name:type.get('DisplayName'),
+                            Value:type.get('TypePath')
+                        });
+                    });
+                    deferred.resolve(types);
+                }
+            }
+        });
+        return deferred.promise;
     },
     _showSettingsDialog: function() {
         if ( this.dialog ) { this.dialog.destroy(); }
@@ -43,6 +79,7 @@ Ext.define('CustomApp', {
             metric: config.metric,
             start_date: config.start_date,
             end_date: config.end_date,
+            artifact_types: config.artifact_types,
             listeners: {
                 settingsChosen: function(dialog,returned_config) {
                     this.config = Ext.Object.merge(this.config,returned_config);

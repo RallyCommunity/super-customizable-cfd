@@ -5,6 +5,14 @@ Ext.define('Rally.technicalservices.SettingsDialog',{
         /* default settings. pass new ones in */
         title: 'Settings',
         model_type: 'HierarchicalRequirement',
+        /**
+         * artifact_types
+         * [ @type ] artifact_types This is the list of items allowed in the model chooser drop down
+         */
+        artifact_types: [
+            {Name:'HierarchicalRequirement',Value:'HierarchicalRequirement'},
+            {Name:'Defect',Value:'Defect'}
+        ],
         group_by_field_name: 'Schedulestate',
         metric: 'Count',
         start_date:Rally.util.DateTime.add(new Date(),"month",-1),
@@ -128,11 +136,7 @@ Ext.define('Rally.technicalservices.SettingsDialog',{
     _addModelChooser: function() {
         var me = this;
         var type_store = Ext.create('Rally.data.custom.Store',{
-            data: [
-                {Name:'HierarchicalRequirement',Value:'HierarchicalRequirement'},
-                {Name:'Defect',Value:'Defect'},
-                {Name:'Task',Value:'Task'}
-            ]
+            data: me.artifact_types
         });
         this.down('#model_selector_box').add({
             xtype:'rallycombobox',
