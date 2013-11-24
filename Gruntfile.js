@@ -10,7 +10,7 @@ module.exports = function(grunt) {
     
         config = grunt.file.readJSON('config.json');
 
-        config.js_files = grunt.file.expand( 'src/javascript/*.js' );
+        config.js_files = grunt.file.expand( 'src/javascript/**/*.js' );
         config.css_files = grunt.file.expand( 'src/style/*.css' );
         config.checksum = "<!= checksum !>";
         

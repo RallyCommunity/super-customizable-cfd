@@ -71,23 +71,33 @@ Ext.define('Rally.technicalservices.util.Utilities', {
             end_date_js = begin_date_js;
             begin_date_js = swap_holder;
         }
+                
+        var dDate1 = Ext.clone(begin_date_js).setHours(0,0,0,0);
+        var dDate2 = Ext.clone(end_date_js).setHours(0,0,0,0);
+        
         var number_of_days = this.daysBetween(begin_date_js,end_date_js,skip_weekends);
         
         var add_value = 1;
+        var add_unit = 'day';
+        
         if ( Ext.isNumber(compress_size) && number_of_days > compress_size ) {
             add_value = 7;
         }
         
-        var dDate1 = Ext.clone(begin_date_js).setHours(0,0,0,0);
-        var dDate2 = Ext.clone(end_date_js).setHours(0,0,0,0);
+        if ( number_of_days <= 2 ) {
+            add_value = 30;
+            add_unit = 'minute';
+            dDate2 = Ext.clone(end_date_js).setHours(23,59,0,0);
+        }
+       
         
         var check_date = new Date(dDate1);
         
         while (check_date <= dDate2) {
-            if ( !skip_weekends || this.isWeekday(check_date) || add_value === 7 ) {
+            if ( !skip_weekends || this.isWeekday(check_date) || add_value === 7 || add_unit == 'minute' ) {
                 the_array.push(check_date);
             }
-            check_date = Rally.util.DateTime.add(check_date,'day',add_value);
+            check_date = Rally.util.DateTime.add(check_date,add_unit,add_value);
         }
         
         return the_array;

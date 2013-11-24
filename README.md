@@ -10,8 +10,10 @@ diagram from.  Choose:
  * An artifact type to get history
  * A field from the artifact type to group on (the different colors of the area chart)
  * A field from the artifact to calculate the Y axis (or count)
- * A beginning and end date -- if within 45 business days, will show each day at midnight, more than 45 days, each week
-    Keep in mind that there is not historical data before 11/11/11.
+ * A beginning and end date -- Keep in mind that there is not historical data before 11/11/11.
+    * if within 45 business days, will show each day at midnight 
+    * if more than 45 days, each week
+    * if 2 or fewer days, will show 30 minute increments
  * An optional query -- this is in the normal Rally query language and will be used to limit the results that are calculated 
     the item must match the filter at this point in time in order to be used for tracking the history (doesn't matter if it
     moved from Release 1 to Release 2 in the period, if you limit to Release 2, we'll see it all the time because it's there now)
@@ -21,7 +23,6 @@ diagram from.  Choose:
  * The filter query tends to be slow -- need to push the objectIDs into the subsequent lookback query
  * The configuration settings could be saved to a preference for future use
  * Perhaps an additional filter for the lookback itself (that is, apply the limits every day instead of at the end and retconning)
- * Perhaps do hour-by-hour if two or fewer days chosen
 
 ## Development Notes
 

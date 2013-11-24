@@ -125,5 +125,17 @@ describe("Using the rally utilities",function() {
             expect(array_of_days[9]).toEqual(date2);
             
         });
+        
+        it('should return an array of 30 minute increments when less than or equal to 2 days', function(){
+            var date1 = new Date(2013,08,09,0,0,0);
+            var date2 = new Date(2013,08,09,23,59,0);
+            
+            var expected_last_timestamp = new Date(2013,08,09,23,30,0);
+            var array_of_days = Rally.technicalservices.util.Utilities.arrayOfDaysBetween(date1,date2,true);
+            expect( array_of_days.length ).toEqual(48);
+            expect( array_of_days[0] ).toEqual(date1);
+            expect( array_of_days[47] ).toEqual(expected_last_timestamp);
+            
+        });
     });
 });
