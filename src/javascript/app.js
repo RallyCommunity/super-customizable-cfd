@@ -301,6 +301,18 @@ Ext.define('CustomApp', {
         
         return series;
     },
+    /*
+     * determine what the distance between two x values is
+     */
+    _getIncrement: function(days){
+        this.logger.log("_getIncrement");
+        var increment = 0;
+        if ( days.length > 1 ) {
+            increment = Rally.util.DateTime.getDifference(days[1].get('JSDate'),days[0].get('JSDate'),'day');
+        }
+        this.logger.log("Increment",increment);
+        return increment;
+    },
     _makeChart: function(days) {
         var me = this;
         var config = this.config;
@@ -311,9 +323,11 @@ Ext.define('CustomApp', {
         
         var categories = this._getCategories(days);
         var series = this._getSeries(days);
+        var increment = this._getIncrement(days);
         
         this.logger.log('categories',categories);
         this.logger.log('series',series);
+        
         
         this.getEl().unmask();
         
@@ -338,6 +352,9 @@ Ext.define('CustomApp', {
                             align: 'left',
                             rotation: 70,
                             formatter: function() {
+                                if ( increment < 1 ) {
+                                    return Ext.Date.format(this.value,'H:i');
+                                }
                                 return Ext.Date.format(this.value,'d-M');
                             }
                         }

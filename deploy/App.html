@@ -3,11 +3,11 @@
 <head>
     <title>Super Customizable Cumulative Flow Diagram</title>
     <!--  (c) 2013 Rally Software Development Corp.  All Rights Reserved. -->
-    <!--  Build Date: Sun Nov 24 2013 11:05:06 GMT-0800 (PST) -->
+    <!--  Build Date: Sun Nov 24 2013 18:31:41 GMT-0800 (PST) -->
     
     <script type="text/javascript">
-        var APP_BUILD_DATE = "Sun Nov 24 2013 11:05:06 GMT-0800 (PST)";
-        var CHECKSUM = 40407984401;
+        var APP_BUILD_DATE = "Sun Nov 24 2013 18:31:41 GMT-0800 (PST)";
+        var CHECKSUM = 41922480380;
     </script>
     
     <script type="text/javascript" src="/apps/2.0rc1/sdk.js"></script>
@@ -919,6 +919,18 @@ Ext.define('CustomApp', {
         
         return series;
     },
+    /*
+     * determine what the distance between two x values is
+     */
+    _getIncrement: function(days){
+        this.logger.log("_getIncrement");
+        var increment = 0;
+        if ( days.length > 1 ) {
+            increment = Rally.util.DateTime.getDifference(days[1].get('JSDate'),days[0].get('JSDate'),'day');
+        }
+        this.logger.log("Increment",increment);
+        return increment;
+    },
     _makeChart: function(days) {
         var me = this;
         var config = this.config;
@@ -929,9 +941,11 @@ Ext.define('CustomApp', {
         
         var categories = this._getCategories(days);
         var series = this._getSeries(days);
+        var increment = this._getIncrement(days);
         
         this.logger.log('categories',categories);
         this.logger.log('series',series);
+        
         
         this.getEl().unmask();
         
@@ -956,6 +970,9 @@ Ext.define('CustomApp', {
                             align: 'left',
                             rotation: 70,
                             formatter: function() {
+                                if ( increment < 1 ) {
+                                    return Ext.Date.format(this.value,'H:i');
+                                }
                                 return Ext.Date.format(this.value,'d-M');
                             }
                         }
