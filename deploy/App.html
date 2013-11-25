@@ -3,11 +3,11 @@
 <head>
     <title>Super Customizable Cumulative Flow Diagram</title>
     <!--  (c) 2013 Rally Software Development Corp.  All Rights Reserved. -->
-    <!--  Build Date: Sun Nov 24 2013 18:31:41 GMT-0800 (PST) -->
+    <!--  Build Date: Mon Nov 25 2013 00:09:58 GMT-0800 (PST) -->
     
     <script type="text/javascript">
-        var APP_BUILD_DATE = "Sun Nov 24 2013 18:31:41 GMT-0800 (PST)";
-        var CHECKSUM = 41922480380;
+        var APP_BUILD_DATE = "Mon Nov 25 2013 00:09:58 GMT-0800 (PST)";
+        var CHECKSUM = 42360165196;
     </script>
     
     <script type="text/javascript" src="/apps/2.0rc1/sdk.js"></script>
@@ -844,40 +844,44 @@ Ext.define('CustomApp', {
         
         this.logger.log("fetching snapshots at", day);
         var project = this.getContext().getProject().ObjectID;
-        
-        var date_array = 
-        Ext.create('Rally.data.lookback.SnapshotStore',{
-            fetch: [config.group_by_field_name, config.metric],
-            autoLoad: true,
-            filters: [
-                {property:'_TypeHierarchy',value:config.model_type},
-                {property:'__At',operator:'=',value:Rally.util.DateTime.toIsoString(day)},
-                {property:'_ProjectHierarchy', value:project}
-            ],
-            hydrate: [config.group_by_field_name],
-            listeners: {
-                load: function(store,snaps,success){
-                    if (success) {
-                        this.logger.log("snaps",snaps);
-                        var day_calculator = Ext.create('TSDay',{
-                            metricFieldName: config.metric,
-                            groupByFieldName:config.group_by_field_name,
-                            JSDate: day
-                        });
-                        Ext.Array.each(snaps, function(snap){
-                            if ( me._shouldUseSnap(snap) ) {
-                                day_calculator.addSnap(snap);
-                            }
-                        });
-                        deferred.resolve(day_calculator);
-                    } else {
-                        deferred.reject("Error Loading Snapshots for " + day);
-                    }
-                },
-                scope: this
-            }
+        var day_calculator = Ext.create('TSDay',{
+            metricFieldName: config.metric,
+            groupByFieldName:config.group_by_field_name,
+            JSDate: day
         });
-        return deferred.promise;
+        
+        if ( day < new Date() ) {
+            Ext.create('Rally.data.lookback.SnapshotStore',{
+                fetch: [config.group_by_field_name, config.metric],
+                autoLoad: true,
+                filters: [
+                    {property:'_TypeHierarchy',value:config.model_type},
+                    {property:'__At',operator:'=',value:Rally.util.DateTime.toIsoString(day)},
+                    {property:'_ProjectHierarchy', value:project}
+                ],
+                hydrate: [config.group_by_field_name],
+                listeners: {
+                    load: function(store,snaps,success){
+                        if (success) {
+                            this.logger.log("snaps",snaps);
+    
+                            Ext.Array.each(snaps, function(snap){
+                                if ( me._shouldUseSnap(snap) ) {
+                                    day_calculator.addSnap(snap);
+                                }
+                            });
+                            deferred.resolve(day_calculator);
+                        } else {
+                            deferred.reject("Error Loading Snapshots for " + day);
+                        }
+                    },
+                    scope: this
+                }
+            });
+            return deferred.promise;
+        } else {
+            return day_calculator;
+        }
     },
     _getCategories: function(days) {
         var me = this;
@@ -902,6 +906,9 @@ Ext.define('CustomApp', {
             if ( day ) {
                 Ext.Array.each(groups,function(group_name){
                     var group_value = day.getGroupTotal(group_name);
+                    if ( day.get('JSDate') > new Date() ) {
+                        group_value = null;
+                    }
                     group_data[group_name].push(group_value);
                 });
             }
