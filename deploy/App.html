@@ -3,11 +3,11 @@
 <head>
     <title>Super Customizable Cumulative Flow Diagram</title>
     <!--  (c) 2013 Rally Software Development Corp.  All Rights Reserved. -->
-    <!--  Build Date: Mon Nov 25 2013 00:09:58 GMT-0800 (PST) -->
+    <!--  Build Date: Mon Dec 30 2013 09:49:28 GMT-0800 (PST) -->
     
     <script type="text/javascript">
-        var APP_BUILD_DATE = "Mon Nov 25 2013 00:09:58 GMT-0800 (PST)";
-        var CHECKSUM = 42360165196;
+        var APP_BUILD_DATE = "Mon Dec 30 2013 09:49:28 GMT-0800 (PST)";
+        var CHECKSUM = 47635917702;
     </script>
     
     <script type="text/javascript" src="/apps/2.0rc1/sdk.js"></script>
@@ -507,7 +507,67 @@ Ext.define('TSStringFilter',{
         this.callParent([this.config]);
     },
     _createQueryString: function(property, operator, value) {
-        return this.query_string;
+        this.filter = this.fromQueryString(this.query_string);
+        return this.filter.toString();
+    },
+    /**
+     * Converts a query string into a Rally compatible QueryFilter
+     * @static
+     * @param {String} query The query string to convert into a QueryFilter
+     * @return {Rally.data.wsapi.Filter} A Rally.data.wsapi.Filter that will convert back to a query string if toString() is called
+     */
+    fromQueryString: function (query) {
+        var parser = Ext.create('Rally.data.util.QueryStringParser', {
+            string: query
+        });
+
+        var initial_expression = parser.parseExpression();
+        return initial_expression;
+    }
+});
+Ext.override(Rally.data.util.QueryStringParser,{
+  applyOperators: function (operators, operator) {
+        if (!operators.length) {
+            return this.parseNextTerm();
+        }
+
+        if (!operator) {
+            operator = operators[0];
+        }
+
+        var property = this.applyOperators(operators.slice(1));
+
+        while (this.peek() === operator) {
+            this.consume(operator);
+            var value = this.applyOperators(operators.slice(1));
+            value = this._convertKeywords(value,operator);
+            property = Ext.create('Rally.data.QueryFilter', {
+                property: property,
+                operator: operator,
+                value: this._convertToType(value)
+            });
+        }
+        return property;
+    },
+    /**
+     * Do date math
+     **/
+    _convertKeywords: function(value,operator) {
+        var xform_value = value;
+        if ( operator != "AND" && operator != "OR" ) {
+            if ( value == "today" ) {
+                xform_value = this._getIsoMidnight(new Date());
+            }
+        } 
+        return xform_value;
+    },
+    /**
+     * 
+     */
+    _getIsoMidnight: function(js_date) {
+        var js_at_midnight = new Date(Ext.clone(new Date()).setHours(0,0,0,0));
+        var iso_at_midnight = Rally.util.DateTime.toIsoString(js_at_midnight).replace(/T.*$/,"");
+        return iso_at_midnight;
     }
 });
 Ext.define('Rally.technicalservices.util.Utilities', {

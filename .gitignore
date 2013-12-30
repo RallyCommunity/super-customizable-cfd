@@ -1,0 +1,5 @@
+test/logs/
+_SpecRunner.html
+.grunt/
+App-debug.html
+node_modules/
