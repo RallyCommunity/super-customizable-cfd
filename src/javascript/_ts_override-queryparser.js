@@ -40,39 +40,87 @@ Ext.override(Rally.data.util.QueryStringParser,{
     _convertKeywords: function(property,operator,value) {
         var xform_value = value;
         if ( operator != "AND" && operator != "OR" ) {
-            var base_js_date = this._getBaseJSDate(value);
-            if ( value == "today" || value == "yesterday" || value == "tomorrow") {
-                if ( operator == "<" || operator == ">=") {
+            if ( this._isDateKeyword(value) ) {
+                var base_js_date = this._getBaseJSDate(value);
+                if ( operator == "<" || operator == ">" || operator == ">=") {
                     xform_value = this._getIsoMidnight(base_js_date);
-                } else if ( operator == ">" || operator == "<=") {
+                } else if ( operator == "<=") {
                     xform_value = this._getIsoMidnight(Rally.util.DateTime.add(base_js_date,"day",1));
                 } else if ( operator == "=" ) {
-                    xform_value = Ext.create('Rally.data.QueryFilter', {
-                        property: property,
-                        operator: ">",
-                        value: this._getIsoMidnight(base_js_date)
-                    }).and(Ext.create('Rally.data.QueryFilter', {
-                        property: property,
-                        operator: "<",
-                        value: this._getIsoMidnight(Rally.util.DateTime.add(base_js_date,"day",1))
-                    }));
+                    // yesterday and tomorrow do NOT include today, but all others do
+                    if ( value == "tomorrow" || value == "yesterday" || value == "today") {
+                        xform_value = Ext.create('Rally.data.QueryFilter', {
+                            property: property,
+                            operator: ">",
+                            value: this._getIsoMidnight(base_js_date)
+                        }).and(Ext.create('Rally.data.QueryFilter', {
+                            property: property,
+                            operator: "<",
+                            value: this._getIsoMidnight(Rally.util.DateTime.add(base_js_date,"day",1))
+                        }));                        
+                    } else {
+                        // everything less than today
+                        var date_1 = base_js_date;
+                        var date_2 = new Date();
+                        
+                        if ( date_1 > date_2 ) {
+                            // include today by starting at beginning of day
+                            xform_value = Ext.create('Rally.data.QueryFilter', {
+                                property: property,
+                                operator: ">",
+                                value: this._getIsoMidnight(date_2)
+                            }).and(Ext.create('Rally.data.QueryFilter', {
+                                property: property,
+                                operator: "<",
+                                value: this._getIsoMidnight(date_1)
+                            }));
+                        } else {
+                            // include today by starting at end of day when going back
+                            xform_value = Ext.create('Rally.data.QueryFilter', {
+                                property: property,
+                                operator: ">",
+                                value: this._getIsoMidnight(date_1)
+                            }).and(Ext.create('Rally.data.QueryFilter', {
+                                property: property,
+                                operator: "<",
+                                value: this._getIsoMidnight(Rally.util.DateTime.add(date_2,"day",1))
+                            }));
+                        }
+                    }
                 }
             }
         } 
         return xform_value;
     },
     _getBaseJSDate: function(keyword){
+        var lc_keyword = Ext.util.Format.lowercase(keyword);
         var today = new Date();
-        if ( keyword == "today" ) {
-            return today;
+        return Rally.util.DateTime.add(today,"day",this.periodShifters[lc_keyword]);
+    },
+    _isDateKeyword: function(keyword) {
+        var isKeyword = false;
+        var valid_keywords = [
+            "today", "tomorrow", "yesterday",
+            "lastweek","lastmonth","lastquarter","lastyear",
+            "nextweek","nextmonth","nextquarter","nextyear"
+        ];
+        if ( Ext.Array.indexOf(valid_keywords,Ext.util.Format.lowercase(keyword)) > -1 ) {
+            isKeyword = true;
         }
-        if ( keyword == "tomorrow" ) {
-            return Rally.util.DateTime.add(today,"day",1)
-        }
-        if ( keyword == "yesterday" ) {
-            return Rally.util.DateTime.add(today,"day",-1)
-        }
-        return keyword;
+        return isKeyword;
+    },
+    periodShifters: {
+        "today": 0,
+        "tomorrow":1, 
+        "yesterday":-1,
+        "lastweek":-6,
+        "lastmonth":-29,
+        "lastquarter":-89,
+        "lastyear":-364,
+        "nextweek":7,
+        "nextmonth":30,
+        "nextquarter":90,
+        "nextyear":365       
     },
     /**
      * 

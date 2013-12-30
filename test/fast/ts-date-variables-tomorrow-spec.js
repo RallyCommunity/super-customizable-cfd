@@ -25,10 +25,10 @@ describe("When working with query strings and providing the tomorrow keyword",fu
         expect(filter.toString()).toEqual(clean_string);
     });
         
-    it("should replace 'tomorrow' with end of day when operator is >",function(){
+    it("should replace 'tomorrow' with beginning of day when operator is >",function(){
         var query_string = '( Iteration.StartDate > "tomorrow" )';
        
-        var clean_string = '(Iteration.StartDate > "' + day_after_tomorrow_at_midnight_iso + '")';
+        var clean_string = '(Iteration.StartDate > "' + tomorrow_at_midnight_iso + '")';
         var filter = Ext.create('TSStringFilter',{query_string:query_string});
         expect(filter.toString()).toEqual(clean_string);
     });

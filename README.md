@@ -1,6 +1,6 @@
 #Super Customizable Cumulative Flow Diagram
 
-This cannot be used in on-premesis installations.
+This cannot be used in on-premises installations.
 
 ## Description
 
@@ -17,7 +17,7 @@ diagram from.  Choose:
  * An optional query -- this is in the normal Rally query language and will be used to limit the results that are calculated 
     the item must match the filter at this point in time in order to be used for tracking the history (doesn't matter if it
     moved from Release 1 to Release 2 in the period, if you limit to Release 2, we'll see it all the time because it's there now)
-    
+
 ### TODO
  * The query box needs more trapping for spaces and hard returns
  * The filter query tends to be slow -- need to push the objectIDs into the subsequent lookback query

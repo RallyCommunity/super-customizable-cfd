@@ -26,7 +26,7 @@ describe("When working with query strings and providing the yesterday keyword",f
     it("should replace 'yesterday' with end of day when operator is >",function(){
         var query_string = '( Iteration.StartDate > "yesterday" )';
        
-        var clean_string = '(Iteration.StartDate > "' + today_at_midnight_iso + '")';
+        var clean_string = '(Iteration.StartDate > "' + yesterday_at_midnight_iso + '")';
         var filter = Ext.create('TSStringFilter',{query_string:query_string});
         expect(filter.toString()).toEqual(clean_string);
     });
@@ -39,7 +39,7 @@ describe("When working with query strings and providing the yesterday keyword",f
         expect(filter.toString()).toEqual(clean_string);
     });
         
-    it("should replace 'today' with beginning of day when operator is >= ",function(){
+    it("should replace 'yesterday' with beginning of day when operator is >= ",function(){
         var query_string = '( Iteration.StartDate >= "yesterday" )';
        
         var clean_string = '(Iteration.StartDate >= "' + yesterday_at_midnight_iso + '")';
