@@ -29,7 +29,7 @@ describe("When working with query strings and providing the today keyword",funct
         expect(filter.toString()).toEqual(clean_string);
     });
         
-    it("should replace 'today' with end of day when operator is <",function(){
+    it("should replace 'today' with end of day when operator is >",function(){
         var query_string = '( Iteration.StartDate > "today" )';
        
         var clean_string = '(Iteration.StartDate > "' + tomorrow_at_midnight_iso + '")';

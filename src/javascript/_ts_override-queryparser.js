@@ -40,25 +40,39 @@ Ext.override(Rally.data.util.QueryStringParser,{
     _convertKeywords: function(property,operator,value) {
         var xform_value = value;
         if ( operator != "AND" && operator != "OR" ) {
-            if ( value == "today" ) {
+            var base_js_date = this._getBaseJSDate(value);
+            if ( value == "today" || value == "yesterday" || value == "tomorrow") {
                 if ( operator == "<" ) {
-                    xform_value = this._getIsoMidnight(new Date());
+                    xform_value = this._getIsoMidnight(base_js_date);
                 } else if ( operator == ">" ) {
-                    xform_value = this._getIsoMidnight(Rally.util.DateTime.add(new Date(),"day",1));
+                    xform_value = this._getIsoMidnight(Rally.util.DateTime.add(base_js_date,"day",1));
                 } else if ( operator == "=" ) {
                     xform_value = Ext.create('Rally.data.QueryFilter', {
                         property: property,
                         operator: ">",
-                        value: this._getIsoMidnight(new Date())
+                        value: this._getIsoMidnight(base_js_date)
                     }).and(Ext.create('Rally.data.QueryFilter', {
                         property: property,
                         operator: "<",
-                        value: this._getIsoMidnight(Rally.util.DateTime.add(new Date(),"day",1))
+                        value: this._getIsoMidnight(Rally.util.DateTime.add(base_js_date,"day",1))
                     }));
                 }
             }
         } 
         return xform_value;
+    },
+    _getBaseJSDate: function(keyword){
+        var today = new Date();
+        if ( keyword == "today" ) {
+            return today;
+        }
+        if ( keyword == "tomorrow" ) {
+            return Rally.util.DateTime.add(today,"day",1)
+        }
+        if ( keyword == "yesterday" ) {
+            return Rally.util.DateTime.add(today,"day",-1)
+        }
+        return keyword;
     },
     /**
      * 
