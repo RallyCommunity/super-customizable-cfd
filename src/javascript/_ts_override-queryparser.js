@@ -13,19 +13,31 @@ Ext.override(Rally.data.util.QueryStringParser,{
         while (this.peek() === operator) {
             this.consume(operator);
             var value = this.applyOperators(operators.slice(1));
-            value = this._convertKeywords(value,operator);
-            property = Ext.create('Rally.data.QueryFilter', {
-                property: property,
-                operator: operator,
-                value: this._convertToType(value)
-            });
+            if ( operator == "AND" || operator == "OR" ) {
+                property = Ext.create('Rally.data.QueryFilter', {
+                    property: property,
+                    operator: operator,
+                    value: this._convertToType(value)
+                });
+            } else {
+                value = this._convertKeywords(property,operator,value);
+                if (typeof(value) == "object" ) {
+                    property = value;
+                } else {
+                    property = Ext.create('Rally.data.QueryFilter', {
+                        property: property,
+                        operator: operator,
+                        value: this._convertToType(value)
+                    });
+                }
+            }
         }
         return property;
     },
     /**
      * Do date math
      **/
-    _convertKeywords: function(value,operator) {
+    _convertKeywords: function(property,operator,value) {
         var xform_value = value;
         if ( operator != "AND" && operator != "OR" ) {
             if ( value == "today" ) {
@@ -33,6 +45,16 @@ Ext.override(Rally.data.util.QueryStringParser,{
                     xform_value = this._getIsoMidnight(new Date());
                 } else if ( operator == ">" ) {
                     xform_value = this._getIsoMidnight(Rally.util.DateTime.add(new Date(),"day",1));
+                } else if ( operator == "=" ) {
+                    xform_value = Ext.create('Rally.data.QueryFilter', {
+                        property: property,
+                        operator: ">",
+                        value: this._getIsoMidnight(new Date())
+                    }).and(Ext.create('Rally.data.QueryFilter', {
+                        property: property,
+                        operator: "<",
+                        value: this._getIsoMidnight(Rally.util.DateTime.add(new Date(),"day",1))
+                    }));
                 }
             }
         } 
