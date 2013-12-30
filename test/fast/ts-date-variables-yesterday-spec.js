@@ -14,7 +14,7 @@ describe("When working with query strings and providing the yesterday keyword",f
         var filter = Ext.create('TSStringFilter',{query_string:query_string});
         expect(filter.toString()).toEqual(clean_string);
     });
-
+   
     it("should replace 'yesterday' with beginning of day when operator is < in multiple nodes",function(){
         var query_string = '(((Iteration.StartDate < "yesterday") AND (Iteration.StartDate < "today")) AND (Iteration.StartDate < "fred"))';
        
@@ -31,6 +31,22 @@ describe("When working with query strings and providing the yesterday keyword",f
         expect(filter.toString()).toEqual(clean_string);
     });
 
+    it("should replace 'yesterday' with end of day when operator is <= ",function(){
+        var query_string = '( Iteration.StartDate <= "yesterday" )';
+       
+        var clean_string = '(Iteration.StartDate <= "' + today_at_midnight_iso + '")';
+        var filter = Ext.create('TSStringFilter',{query_string:query_string});
+        expect(filter.toString()).toEqual(clean_string);
+    });
+        
+    it("should replace 'today' with beginning of day when operator is >= ",function(){
+        var query_string = '( Iteration.StartDate >= "yesterday" )';
+       
+        var clean_string = '(Iteration.StartDate >= "' + yesterday_at_midnight_iso + '")';
+        var filter = Ext.create('TSStringFilter',{query_string:query_string});
+        expect(filter.toString()).toEqual(clean_string);
+    });
+    
     it("should replace 'yesterday' with a range when operator is =",function(){
         var query_string = '( Iteration.StartDate = "yesterday" )';
        

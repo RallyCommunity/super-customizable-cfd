@@ -21,6 +21,22 @@ describe("When working with query strings and providing the today keyword",funct
         expect(filter.toString()).toEqual(clean_string);
     });
     
+    it("should replace 'today' with end of day when operator is <= ",function(){
+        var query_string = '( Iteration.StartDate <= "today" )';
+       
+        var clean_string = '(Iteration.StartDate <= "' + tomorrow_at_midnight_iso + '")';
+        var filter = Ext.create('TSStringFilter',{query_string:query_string});
+        expect(filter.toString()).toEqual(clean_string);
+    });
+        
+    it("should replace 'today' with beginning of day when operator is >= ",function(){
+        var query_string = '( Iteration.StartDate >= "today" )';
+       
+        var clean_string = '(Iteration.StartDate >= "' + today_at_midnight_iso + '")';
+        var filter = Ext.create('TSStringFilter',{query_string:query_string});
+        expect(filter.toString()).toEqual(clean_string);
+    });
+    
     it("should replace 'today' with beginning of day when operator is < in multiple nodes",function(){
         var query_string = '(((Iteration.StartDate < "today") AND (Iteration.StartDate < "today")) AND (Iteration.StartDate < "fred"))';
        

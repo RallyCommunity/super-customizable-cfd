@@ -42,9 +42,9 @@ Ext.override(Rally.data.util.QueryStringParser,{
         if ( operator != "AND" && operator != "OR" ) {
             var base_js_date = this._getBaseJSDate(value);
             if ( value == "today" || value == "yesterday" || value == "tomorrow") {
-                if ( operator == "<" ) {
+                if ( operator == "<" || operator == ">=") {
                     xform_value = this._getIsoMidnight(base_js_date);
-                } else if ( operator == ">" ) {
+                } else if ( operator == ">" || operator == "<=") {
                     xform_value = this._getIsoMidnight(Rally.util.DateTime.add(base_js_date,"day",1));
                 } else if ( operator == "=" ) {
                     xform_value = Ext.create('Rally.data.QueryFilter', {
