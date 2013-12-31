@@ -18,7 +18,7 @@ Ext.define('Rally.technicalservices.InfoLink',{
      * cfg {String} title
      * The title for the dialog box
      */
-     text: "Information",
+     title: "Information",
     
     renderTpl: "<div id='{id}-infolinkWrap' class='tsinfolink'>TS</div>",
 

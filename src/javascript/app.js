@@ -1,7 +1,7 @@
 Ext.define('CustomApp', {
     extend: 'Rally.app.App',
     componentCls: 'app',
-
+    key: 'rally.techservices.supercfd',
     config: {
         model_type:'HierarchicalRequirement',
         start_date: Rally.util.DateTime.add(new Date(),"month",-3),
@@ -20,12 +20,12 @@ Ext.define('CustomApp', {
     items: [
         {xtype:'container',itemId:'selector_box', margin: 5, padding: 5},
         {xtype:'container',itemId:'chart_box', margin: 10, padding: 10},
-        {xtype:'tsinfolink',informationHtml:"<strong>Super-Customizable CFD</strong><p/>Start by pushing the Settings button"}
+        {xtype:'tsinfolink',informationHtml:"<strong>Super-Customizable Date-Driven Area Chart</strong>"}
     ],
     launch: function() {
         this.logger.log("Launched with context", this.getContext(), "and config", this.config);
         var me = this;
-        
+        me._getSettings();
         this._getPITypes().then({
             success: function(pi_types) {
                 me.down('#selector_box').add({
@@ -35,13 +35,32 @@ Ext.define('CustomApp', {
                         me._showSettingsDialog();
                     },
                     scope: me
-                    
                 });
             },
             failure: function(error) {
                 alert(error);
             }
         });
+    },
+    _getSettings: function() {
+        var me = this;
+        Rally.data.PreferenceManager.load({
+            appID: me.getAppId(),
+            success: function(prefs) {
+                //process prefs
+                me.logger.log(prefs);
+                if ( prefs && prefs[me.key] ) {
+                    me.config = Ext.JSON.decode(prefs[me.key]);
+                    if ( typeof(me.config.start_date) == "string" ) {
+                        me.config.start_date = Rally.util.DateTime.fromIsoString(me.config.start_date);
+                    }
+                    if ( typeof(me.config.end_date) == "string" ) {
+                        me.config.end_date = Rally.util.DateTime.fromIsoString(me.config.end_date);
+                    }
+                    me._reCalculate();
+                }
+            }
+        });    
     },
     _getPITypes: function() {
         var me = this;
@@ -73,6 +92,7 @@ Ext.define('CustomApp', {
     _showSettingsDialog: function() {
         if ( this.dialog ) { this.dialog.destroy(); }
         var config = this.config;
+        var me = this;
         
         this.dialog = Ext.create('Rally.technicalservices.SettingsDialog',{
             model_type: config.model_type,
@@ -89,6 +109,15 @@ Ext.define('CustomApp', {
                     if ( this.config.start_date < new Date(2011,10,11) ) { this.config.start_date = new Date(2011,10,11); }
                     if ( this.config.end_date < new Date(2011,10,11) ) { this.config.end_date = new Date(2011,10,11); }
                     
+                    var settings = {};
+                    settings[this.key] = Ext.JSON.encode(this.config);
+                    Rally.data.PreferenceManager.update({
+                        appID: me.getAppId(),
+                        settings: settings,
+                        success: function(updatedRecords, notUpdatedRecords) {
+                            //yay!
+                        }
+                    });
                     this._reCalculate();
                 },
                 scope: this
@@ -167,7 +196,7 @@ Ext.define('CustomApp', {
         this.getEl().mask("Loading Historical Data");
 
         var config = this.config;
-                
+        this.logger.log("Getting array of days between",config.start_date,config.end_date,true,config.day_to_week_switch_point);
         var array_of_days = Rally.technicalservices.util.Utilities.arrayOfDaysBetween(config.start_date,config.end_date,true,config.day_to_week_switch_point);
         
         var promises = _.map(array_of_days,me._getSnapshots,this);

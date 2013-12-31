@@ -3,11 +3,11 @@
 <head>
     <title>Super Customizable Cumulative Flow Diagram</title>
     <!--  (c) 2013 Rally Software Development Corp.  All Rights Reserved. -->
-    <!--  Build Date: Mon Dec 30 2013 13:35:53 GMT-0800 (PST) -->
+    <!--  Build Date: Mon Dec 30 2013 17:03:53 GMT-0800 (PST) -->
     
     <script type="text/javascript">
-        var APP_BUILD_DATE = "Mon Dec 30 2013 13:35:53 GMT-0800 (PST)";
-        var CHECKSUM = 58470727866;
+        var APP_BUILD_DATE = "Mon Dec 30 2013 17:03:53 GMT-0800 (PST)";
+        var CHECKSUM = 64247852936;
     </script>
     
     <script type="text/javascript" src="/apps/2.0rc1/sdk.js"></script>
@@ -100,7 +100,7 @@ Ext.define('Rally.technicalservices.InfoLink',{
      * cfg {String} title
      * The title for the dialog box
      */
-     text: "Information",
+     title: "Information",
     
     renderTpl: "<div id='{id}-infolinkWrap' class='tsinfolink'>TS</div>",
 
@@ -668,6 +668,14 @@ Ext.define('Rally.technicalservices.util.Utilities', {
         return result;
     },
     daysBetween: function(begin_date_js,end_date_js,skip_weekends){
+
+        if ( typeof(begin_date_js) == "string" ) {
+            begin_date_js = Rally.util.DateTime.fromIsoString(begin_date_js);
+        }
+        if ( typeof(end_date_js) == "string" ) {
+            end_date_js = Rally.util.DateTime.fromIsoString(end_date_js);
+        }
+        
         var dDate1 = Ext.clone(begin_date_js).setHours(0,0,0,0);
         var dDate2 = Ext.clone(end_date_js).setHours(0,0,0,0);
         
@@ -725,7 +733,12 @@ Ext.define('Rally.technicalservices.util.Utilities', {
      */
     arrayOfDaysBetween: function(begin_date_js, end_date_js, skip_weekends, compress_size ) {
         var the_array = [];
-        
+        if ( typeof(begin_date_js) == "string" ) {
+            begin_date_js = Rally.util.DateTime.fromIsoString(begin_date_js);
+        }
+        if ( typeof(end_date_js) == "string" ) {
+            end_date_js = Rally.util.DateTime.fromIsoString(end_date_js);
+        }
         if ( begin_date_js > end_date_js ) {
             var swap_holder = end_date_js;
             end_date_js = begin_date_js;
@@ -767,7 +780,7 @@ Ext.define('Rally.technicalservices.util.Utilities', {
 Ext.define('CustomApp', {
     extend: 'Rally.app.App',
     componentCls: 'app',
-
+    key: 'rally.techservices.supercfd',
     config: {
         model_type:'HierarchicalRequirement',
         start_date: Rally.util.DateTime.add(new Date(),"month",-3),
@@ -786,12 +799,12 @@ Ext.define('CustomApp', {
     items: [
         {xtype:'container',itemId:'selector_box', margin: 5, padding: 5},
         {xtype:'container',itemId:'chart_box', margin: 10, padding: 10},
-        {xtype:'tsinfolink',informationHtml:"<strong>Super-Customizable CFD</strong><p/>Start by pushing the Settings button"}
+        {xtype:'tsinfolink',informationHtml:"<strong>Super-Customizable Date-Driven Area Chart</strong>"}
     ],
     launch: function() {
         this.logger.log("Launched with context", this.getContext(), "and config", this.config);
         var me = this;
-        
+        me._getSettings();
         this._getPITypes().then({
             success: function(pi_types) {
                 me.down('#selector_box').add({
@@ -801,13 +814,32 @@ Ext.define('CustomApp', {
                         me._showSettingsDialog();
                     },
                     scope: me
-                    
                 });
             },
             failure: function(error) {
                 alert(error);
             }
         });
+    },
+    _getSettings: function() {
+        var me = this;
+        Rally.data.PreferenceManager.load({
+            appID: me.getAppId(),
+            success: function(prefs) {
+                //process prefs
+                me.logger.log(prefs);
+                if ( prefs && prefs[me.key] ) {
+                    me.config = Ext.JSON.decode(prefs[me.key]);
+                    if ( typeof(me.config.start_date) == "string" ) {
+                        me.config.start_date = Rally.util.DateTime.fromIsoString(me.config.start_date);
+                    }
+                    if ( typeof(me.config.end_date) == "string" ) {
+                        me.config.end_date = Rally.util.DateTime.fromIsoString(me.config.end_date);
+                    }
+                    me._reCalculate();
+                }
+            }
+        });    
     },
     _getPITypes: function() {
         var me = this;
@@ -839,6 +871,7 @@ Ext.define('CustomApp', {
     _showSettingsDialog: function() {
         if ( this.dialog ) { this.dialog.destroy(); }
         var config = this.config;
+        var me = this;
         
         this.dialog = Ext.create('Rally.technicalservices.SettingsDialog',{
             model_type: config.model_type,
@@ -855,6 +888,15 @@ Ext.define('CustomApp', {
                     if ( this.config.start_date < new Date(2011,10,11) ) { this.config.start_date = new Date(2011,10,11); }
                     if ( this.config.end_date < new Date(2011,10,11) ) { this.config.end_date = new Date(2011,10,11); }
                     
+                    var settings = {};
+                    settings[this.key] = Ext.JSON.encode(this.config);
+                    Rally.data.PreferenceManager.update({
+                        appID: me.getAppId(),
+                        settings: settings,
+                        success: function(updatedRecords, notUpdatedRecords) {
+                            //yay!
+                        }
+                    });
                     this._reCalculate();
                 },
                 scope: this
@@ -933,7 +975,7 @@ Ext.define('CustomApp', {
         this.getEl().mask("Loading Historical Data");
 
         var config = this.config;
-                
+        this.logger.log("Getting array of days between",config.start_date,config.end_date,true,config.day_to_week_switch_point);
         var array_of_days = Rally.technicalservices.util.Utilities.arrayOfDaysBetween(config.start_date,config.end_date,true,config.day_to_week_switch_point);
         
         var promises = _.map(array_of_days,me._getSnapshots,this);

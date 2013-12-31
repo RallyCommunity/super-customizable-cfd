@@ -8,6 +8,14 @@ Ext.define('Rally.technicalservices.util.Utilities', {
         return result;
     },
     daysBetween: function(begin_date_js,end_date_js,skip_weekends){
+
+        if ( typeof(begin_date_js) == "string" ) {
+            begin_date_js = Rally.util.DateTime.fromIsoString(begin_date_js);
+        }
+        if ( typeof(end_date_js) == "string" ) {
+            end_date_js = Rally.util.DateTime.fromIsoString(end_date_js);
+        }
+        
         var dDate1 = Ext.clone(begin_date_js).setHours(0,0,0,0);
         var dDate2 = Ext.clone(end_date_js).setHours(0,0,0,0);
         
@@ -65,7 +73,12 @@ Ext.define('Rally.technicalservices.util.Utilities', {
      */
     arrayOfDaysBetween: function(begin_date_js, end_date_js, skip_weekends, compress_size ) {
         var the_array = [];
-        
+        if ( typeof(begin_date_js) == "string" ) {
+            begin_date_js = Rally.util.DateTime.fromIsoString(begin_date_js);
+        }
+        if ( typeof(end_date_js) == "string" ) {
+            end_date_js = Rally.util.DateTime.fromIsoString(end_date_js);
+        }
         if ( begin_date_js > end_date_js ) {
             var swap_holder = end_date_js;
             end_date_js = begin_date_js;

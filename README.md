@@ -4,8 +4,7 @@ This cannot be used in on-premises installations.
 
 ## Description
 
-This is a new chart.  You can choose the record type to make a cumulative flow
-diagram from.  Choose:
+This is a new chart.  You can choose the record type to make a date-driven area diagram from.  Also choose:
 
  * An artifact type to get history
  * A field from the artifact type to group on (the different colors of the area chart)
@@ -17,13 +16,15 @@ diagram from.  Choose:
  * An optional query -- this is in the normal Rally query language and will be used to limit the results that are calculated 
     the item must match the filter at this point in time in order to be used for tracking the history (doesn't matter if it
     moved from Release 1 to Release 2 in the period, if you limit to Release 2, we'll see it all the time because it's there now)
-
+ * The optional query now supports the date keywords (but NOT the math) listed [here](https://help.rallydev.com/use-grid-app-queries#dates)
+ * Configuration settings are saved
+ 
 ### TODO
- * The query box needs more trapping for spaces and hard returns
- * The filter query tends to be slow -- need to push the objectIDs into the subsequent lookback query
- * The configuration settings could be saved to a preference for future use
- * Perhaps an additional filter for the lookback itself (that is, apply the limits every day instead of at the end and retconning)
-
+ * Perhaps an additional filter for the lookback itself (that is, apply the limits every day instead of (in addition to?) at the end and retconning)
+ * Add query math for date keywords
+ * Allow interaction with the page-based timebox dropdowns (iteration/release)
+ * Move settings to the settings gear
+ 
 ## Development Notes
 
 ### First Load
@@ -31,6 +32,7 @@ diagram from.  Choose:
 If you've just downloaded this from github and you want to do development, 
 you're going to need to have these installed:
 
+ * git
  * node.js
  * grunt-cli
  * grunt-init
