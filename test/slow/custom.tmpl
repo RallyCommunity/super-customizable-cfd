@@ -144,7 +144,7 @@
                                 jasmineEnv.execute();
                             }
                         });
-                        throw("Ignore the context.getUser null error below!");
+                        console.warn("Ignore the context.getUser null error below!");
                         Rally.launchApp('TestApp', {
                             name: 'Test Accessible App'
                         });
