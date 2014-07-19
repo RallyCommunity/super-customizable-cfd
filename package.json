@@ -1,6 +1,6 @@
 {
   "_comment": "This file is used by grunt",
-  "name": "iteration-adjuster",
+  "name": "owned-story-grid",
   "version": "0.1.0",
   "dependencies": {},
   "devDependencies": {

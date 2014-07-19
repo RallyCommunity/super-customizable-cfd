@@ -10,7 +10,10 @@ module.exports = function(grunt) {
     
         config = grunt.file.readJSON('config.json');
 
-        config.js_files = grunt.file.expand( 'src/javascript/**/*.js' );
+        config.js_files = grunt.file.expand(['src/javascript/*.js']);
+
+        config.ugly_files = grunt.file.expand(['deploy/app.min.*.js']);
+        
         config.css_files = grunt.file.expand( 'src/style/*.css' );
         config.checksum = "<!= checksum !>";
         
@@ -25,27 +28,49 @@ module.exports = function(grunt) {
             grunt.log.writeln( config.css_files[i]);
             config.style_contents = config.style_contents + "\n" + grunt.file.read(config.css_files[i]);
         }
+        
+        config.ugly_contents = "";
+        for ( var i=0;i<config.ugly_files;i++ ) {
+            grunt.file.read(config.ugly_files[i]);
+        }
     }
     if ( grunt.file.exists(auth_file_name) ) {
     // grunt.log.writeln( config.js_contents );
         var auth = grunt.file.readJSON(auth_file_name);
         config.auth = auth
+    } else {
+        grunt.log.writeln("");
+        grunt.log.writeln("WARNING: Slow tests won't run without an auth.json file");
     }
     
     grunt.initConfig({
         pkg: grunt.file.readJSON('package.json'),
+        uglify: {
+            options: {
+                mangle: true
+            },
+            ugly: {
+                files: { 'deploy/app.min.js': config.js_files }
+            }
+        },
         template: {
                 dev: {
-                        src: 'templates/App-debug-tpl.html',
-                        dest: 'App-debug.html',
-                        engine: 'underscore',
-                        variables: config
+                    src: 'templates/App-debug-tpl.html',
+                    dest: 'App-debug.html',
+                    engine: 'underscore',
+                    variables: config
                 },
                 prod: {
-                        src: 'templates/App-tpl.html',
-                        dest: 'deploy/App.html',
-                        engine: 'underscore',
-                        variables: config
+                    src: 'templates/App-tpl.html',
+                    dest: 'deploy/App.html',
+                    engine: 'underscore',
+                    variables: config
+                },
+                ugly: {
+                    src: 'templates/App-ugly-tpl.html',
+                    dest: 'deploy/Ugly.html',
+                    engine: 'underscore',
+                    variables: config                    
                 }
         },
         jasmine: {
@@ -104,15 +129,17 @@ module.exports = function(grunt) {
     //load
     grunt.loadNpmTasks('grunt-templater');
     grunt.loadNpmTasks('grunt-contrib-jasmine');
-    
+    grunt.loadNpmTasks('grunt-contrib-uglify');
     //tasks
-    grunt.registerTask('default', ['debug','build']);
+    grunt.registerTask('default', ['debug','build','ugly']);
     
     // (uses all the files in src/javascript)
     grunt.registerTask('build', "Create the html for deployment",['template:prod','setChecksum']);
     // 
     grunt.registerTask('debug', "Create an html file that can run in its own tab", ['template:dev']);
-   
+    //
+    grunt.registerTask('ugly', "Create the ugly html for deployment",['uglify:ugly','template:ugly']);
+
     grunt.registerTask('test-fast', "Run tests that don't need to connect to Rally", ['jasmine:fast']);
     grunt.registerTask('test-slow', "Run tests that need to connect to Rally", ['jasmine:slow']);
 

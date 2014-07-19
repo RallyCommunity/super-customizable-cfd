@@ -107,6 +107,7 @@
        var afterWait = function() {
             // get us logged in
             var token = '<%= options.auth.username %>:<%= options.auth.password %>';
+            //var auth_string = 'Basic ' + Base64.encode(token);
             var auth_string = 'Basic ' + Base64.encode(token);
         
             // making a very simple query to establish authentication
@@ -143,7 +144,7 @@
                                 jasmineEnv.execute();
                             }
                         });
-                        console.log("Ignore the context.getUser null error below!");
+                        throw("Ignore the context.getUser null error below!");
                         Rally.launchApp('TestApp', {
                             name: 'Test Accessible App'
                         });
