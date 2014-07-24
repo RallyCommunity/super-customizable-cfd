@@ -131,14 +131,14 @@ module.exports = function(grunt) {
     grunt.loadNpmTasks('grunt-contrib-jasmine');
     grunt.loadNpmTasks('grunt-contrib-uglify');
     //tasks
-    grunt.registerTask('default', ['debug','build','ugly']);
+    grunt.registerTask('default', ['debug','build']);
     
     // (uses all the files in src/javascript)
     grunt.registerTask('build', "Create the html for deployment",['template:prod','setChecksum']);
     // 
     grunt.registerTask('debug', "Create an html file that can run in its own tab", ['template:dev']);
     //
-    grunt.registerTask('ugly', "Create the ugly html for deployment",['uglify:ugly','template:ugly']);
+    //grunt.registerTask('ugly', "Create the ugly html for deployment",['uglify:ugly','template:ugly']);
 
     grunt.registerTask('test-fast', "Run tests that don't need to connect to Rally", ['jasmine:fast']);
     grunt.registerTask('test-slow', "Run tests that need to connect to Rally", ['jasmine:slow']);
