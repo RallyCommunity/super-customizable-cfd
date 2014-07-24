@@ -3,11 +3,11 @@
 <head>
     <title>Super Customizable Cumulative Flow Diagram</title>
     <!--  (c) 2013 Rally Software Development Corp.  All Rights Reserved. -->
-    <!--  Build Date: Fri Jul 18 2014 19:20:29 GMT-0700 (PDT) -->
+    <!--  Build Date: Thu Jul 24 2014 16:45:37 GMT-0700 (PDT) -->
     
     <script type="text/javascript">
-        var APP_BUILD_DATE = "Fri Jul 18 2014 19:20:29 GMT-0700 (PDT)";
-        var CHECKSUM = 64247860889;
+        var APP_BUILD_DATE = "Thu Jul 24 2014 16:45:37 GMT-0700 (PDT)";
+        var CHECKSUM = 64847175355;
     </script>
     
     <script type="text/javascript" src="/apps/2.0rc1/sdk.js"></script>
@@ -66,6 +66,9 @@
                     snap_value = "false"; 
                 } 
             }
+            
+            if ( ! snap_value || snap_value == "" ) { snap_value = "None"; }
+            
             if ( ! this.group_totals[snap_value] ) { this.group_totals[snap_value] = 0; }
             this.group_totals[snap_value] = this.group_totals[snap_value] + value_in_snap;
         }
@@ -1088,13 +1091,16 @@ Ext.define('CustomApp', {
         var series = [];
         
         var groups = this.config.groups;
+        this.logger.log("groups: ", groups);
         Ext.Array.each(groups, function(group){
+            if ( !group || group == "" ) { group = "None"; }
             group_data[group] = [];
         });
         
         Ext.Array.each(days, function(day){
             if ( day ) {
                 Ext.Array.each(groups,function(group_name){
+                    if ( !group_name || group_name == "" ) { group_name = "None"; }
                     var group_value = day.getGroupTotal(group_name);
                     if ( day.get('JSDate') > new Date() ) {
                         group_value = null;
@@ -1104,16 +1110,15 @@ Ext.define('CustomApp', {
             }
         });
         
-        Ext.Array.each(groups,function(group_name){
-            var display_group_name = group_name;
-            if ( group_name == "" ) { display_group_name = "None"; }
+        Ext.Object.each(group_data, function(group_name, group_value){
             series.push({
                 type:'area',
-                name: display_group_name,
-                data: group_data[group_name]
+                name: group_name,
+                data: group_value
             });
         });
         
+        this.logger.log(series);
         return series;
     },
     /*

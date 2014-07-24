@@ -3,3 +3,4 @@ _SpecRunner.html
 .grunt/
 App-debug.html
 node_modules/
+auth.json

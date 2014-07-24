@@ -72,4 +72,24 @@ describe("When making a TSDay model using a metric other than count",function(){
         expect(day.getGroupTotal('true')).toEqual(5);
         expect(day.getGroupTotal('false')).toEqual(0);
     });
+    
+    it("should convert snapshots with missing group value to None",function(){
+        var day = Ext.create('TSDay',{
+            groupByFieldName:'c_Category',
+            metricFieldName:'c_Effort'
+        });
+        
+        var snap1 = Ext.create('mockSnap',{ ObjectID:5, Project: 5, c_Effort: 5, c_Category: "Fred" });
+        var snap2 = Ext.create('mockSnap',{ ObjectID:6, Project: 5, c_Effort: 5, c_Category: ""});
+        var snap3 = Ext.create('mockSnap',{ ObjectID:7, Project: 5, c_Effort: 5, c_Category: null });
+        
+        day.addSnap(snap1);
+        day.addSnap(snap2);
+        day.addSnap(snap3);
+
+        expect(day.get('Total')).toEqual(15);
+        expect(day.getGroupTotal('Fred')).toEqual(5);
+        expect(day.getGroupTotal('None')).toEqual(10);
+    });
+    
 });

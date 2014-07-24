@@ -49,6 +49,9 @@
                     snap_value = "false"; 
                 } 
             }
+            
+            if ( ! snap_value || snap_value == "" ) { snap_value = "None"; }
+            
             if ( ! this.group_totals[snap_value] ) { this.group_totals[snap_value] = 0; }
             this.group_totals[snap_value] = this.group_totals[snap_value] + value_in_snap;
         }

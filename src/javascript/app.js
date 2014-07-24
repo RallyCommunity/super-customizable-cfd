@@ -309,13 +309,16 @@ Ext.define('CustomApp', {
         var series = [];
         
         var groups = this.config.groups;
+        this.logger.log("groups: ", groups);
         Ext.Array.each(groups, function(group){
+            if ( !group || group == "" ) { group = "None"; }
             group_data[group] = [];
         });
         
         Ext.Array.each(days, function(day){
             if ( day ) {
                 Ext.Array.each(groups,function(group_name){
+                    if ( !group_name || group_name == "" ) { group_name = "None"; }
                     var group_value = day.getGroupTotal(group_name);
                     if ( day.get('JSDate') > new Date() ) {
                         group_value = null;
@@ -325,16 +328,15 @@ Ext.define('CustomApp', {
             }
         });
         
-        Ext.Array.each(groups,function(group_name){
-            var display_group_name = group_name;
-            if ( group_name == "" ) { display_group_name = "None"; }
+        Ext.Object.each(group_data, function(group_name, group_value){
             series.push({
                 type:'area',
-                name: display_group_name,
-                data: group_data[group_name]
+                name: group_name,
+                data: group_value
             });
         });
         
+        this.logger.log(series);
         return series;
     },
     /*
