@@ -9,6 +9,7 @@ describe("When making a TS CFD Calculator with group_type set to 'count'",functi
     it("should make one series with one x-axis value when given a single snapshot",function(){
         var calculator = Ext.create('Rally.TechnicalServices.CFDCalculator',{
             allowed_values: ['Completed'],
+            group_by_field: 'ScheduleState',
             group_type: 'count'
         });
         
@@ -33,7 +34,8 @@ describe("When making a TS CFD Calculator with group_type set to 'count'",functi
     it("should make two serieses with one x-axis value when given a two snapshot on same day",function(){
         var calculator = Ext.create('Rally.TechnicalServices.CFDCalculator',{
             allowed_values: ['Completed','Accepted'],
-            group_type: 'count'
+            group_type: 'count',
+            group_by_field: 'ScheduleState'
         });
         
         var snap1 = { 
@@ -68,6 +70,7 @@ describe("When making a TS CFD Calculator with group_type set to 'count'",functi
     it("should ignore a snapshot with a groupby value that is not in the configured set",function(){
         var calculator = Ext.create('Rally.TechnicalServices.CFDCalculator',{
             allowed_values: ['Completed','Accepted'],
+            group_by_field: 'ScheduleState',
             group_type: 'count'
         });
         
@@ -109,6 +112,7 @@ describe("When making a TS CFD Calculator with group_type set to 'count'",functi
     it("should ignore a snapshot with a valid groupby value if not valid on same day",function(){
         var calculator = Ext.create('Rally.TechnicalServices.CFDCalculator',{
             allowed_values: ['Completed','Accepted'],
+            group_by_field: 'ScheduleState',
             group_type: 'count'
         });
         

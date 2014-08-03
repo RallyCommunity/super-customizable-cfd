@@ -3,10 +3,10 @@
 <head>
     <title>Super Customizable Cumulative Flow Diagram</title>
     <!--  (c) 2013 Rally Software Development Corp.  All Rights Reserved. -->
-    <!--  Build Date: Fri Aug 01 2014 20:48:57 GMT-0700 (PDT) -->
+    <!--  Build Date: Sat Aug 02 2014 17:51:00 GMT-0700 (PDT) -->
     
     <script type="text/javascript">
-        var APP_BUILD_DATE = "Fri Aug 01 2014 20:48:57 GMT-0700 (PDT)";
+        var APP_BUILD_DATE = "Sat Aug 02 2014 17:51:00 GMT-0700 (PDT)";
         var CHECKSUM = [%= checksum %];
     </script>
     

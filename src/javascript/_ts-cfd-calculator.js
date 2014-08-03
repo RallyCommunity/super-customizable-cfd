@@ -3,6 +3,15 @@ Ext.define("Rally.TechnicalServices.CFDCalculator", {
 
     config: {
         /*
+         * Required
+         */
+        group_by_field: null,
+        /*
+         * Name of field that holds the value to add up
+         * (Required if type is "sum")
+         */
+        value_field: null, 
+        /*
          * allowed_values (Required): array of available values in field to group by
          */
          allowed_values: null,
@@ -16,6 +25,12 @@ Ext.define("Rally.TechnicalServices.CFDCalculator", {
         this.callParent(arguments);
         if (!this.config.allowed_values || this.config.allowed_values.length == 0) {
             throw "Cannot create Rally.TechnicalServices.CFDCalculator without allowed_values";
+        }
+        if (!this.config.group_by_field) {
+            throw "Cannot create Rally.TechnicalServices.CFDCalculator without group_by_field";
+        }
+        if (this.config.group_type == 'sum' && !this.config.value_field) {
+            throw "Cannot create Rally.TechnicalServices.CFDCalculator by sum without value_field";
         }
     },
         
@@ -38,8 +53,8 @@ Ext.define("Rally.TechnicalServices.CFDCalculator", {
         
         var metric = {
             f: 'groupBySum',
-            field: 'PlanEstimate', 
-            groupByField: 'ScheduleState', 
+            field: this.value_field, 
+            groupByField: this.group_by_field, 
             allowedValues: this.allowed_values,
             display:'area'
         };
@@ -48,6 +63,7 @@ Ext.define("Rally.TechnicalServices.CFDCalculator", {
             metric.f = 'groupByCount';
         }
         
+        console.log(metric);
         return [ metric ];
     },
     /*

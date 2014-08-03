@@ -8,13 +8,27 @@ Ext.define('CustomApp', {
         {xtype:'tsinfolink'}
     ],
     launch: function() {
-        this._makeGraph();
+        this._makeChart();
     },
-    _makeGraph: function(allowed_values) {
+    _getChartTitle: function(type_path,group_by_field){
+        var type = this._deCamelCase(type_path);
+        var field = this._deCamelCase(group_by_field);
+        
+        return type + " grouped by " + field;
+    },
+    _deCamelCase: function(camelCaseText){
+        var result = camelCaseText.replace( /([A-Z])/g, " $1" );
+        var finalResult = result.charAt(0).toUpperCase() + result.slice(1);
+        return finalResult;
+    },
+    _makeChart: function(group_by_field) {
         var project = this.getContext().getProject().ObjectID;
-        var allowed_values = ['Defined','In-Progress', 'Completed', 'Accepted'];
         var type_path = "HierarchicalRequirement";
-        var chart_title = type_path;
+        var group_by_field = "ScheduleState";
+        var allowed_values = ['Defined','In-Progress', 'Completed', 'Accepted'];
+        var metric_field = "PlanEstimate";
+        
+        var chart_title = this._getChartTitle(type_path,group_by_field);
         
         
         this.down('#display_box').add({
@@ -24,15 +38,16 @@ Ext.define('CustomApp', {
             calculatorConfig: {
                 /*startDate: "2013-12-01T00:00:00.000Z",*/
                 /*tz: "America/Anchorage",*/
-                allowed_values: allowed_values
+                allowed_values: allowed_values,
+                metric_field: metric_field
             },
             storeConfig: {
                 filters: [
                     {property:'_TypeHierarchy',value: type_path},
                     {property:'_ProjectHierarchy', value: project}
                 ],
-                hydrate: ["ScheduleState"],
-                fetch: ["ScheduleState","PlanEstimate"]
+                hydrate: [group_by_field],
+                fetch: [group_by_field,metric_field]
             },
             chartConfig: {
                  chart: {
@@ -51,7 +66,7 @@ Ext.define('CustomApp', {
                  yAxis: [
                      {
                          title: {
-                             text: 'Count'
+                             text: metric_field
                          }
                      }
                  ],

@@ -3,11 +3,11 @@
 <head>
     <title>Super Customizable Cumulative Flow Diagram</title>
     <!--  (c) 2013 Rally Software Development Corp.  All Rights Reserved. -->
-    <!--  Build Date: Fri Aug 01 2014 20:48:57 GMT-0700 (PDT) -->
+    <!--  Build Date: Sat Aug 02 2014 17:51:00 GMT-0700 (PDT) -->
     
     <script type="text/javascript">
-        var APP_BUILD_DATE = "Fri Aug 01 2014 20:48:57 GMT-0700 (PDT)";
-        var CHECKSUM = 20501044422;
+        var APP_BUILD_DATE = "Sat Aug 02 2014 17:51:00 GMT-0700 (PDT)";
+        var CHECKSUM = 14001093875;
     </script>
     
     <script type="text/javascript" src="/apps/2.0rc3/sdk.js"></script>
@@ -19,6 +19,31 @@ Ext.define("Rally.TechnicalServices.CFDCalculator", {
     extend: "Rally.data.lookback.calculator.TimeSeriesCalculator",
 
     config: {
+        group_by_field: null,
+        /*
+         * Name of field that holds the value to add up
+         */
+        value_field: null, 
+        /*
+         * allowed_values (Required): array of available values in field to group by
+         */
+         allowed_values: null,
+         granularity: 'day',
+         /*
+          * group_type: 'sum' | 'count' whether to count on given field or to count the records
+          */
+         group_type: 'sum'
+    },
+    constructor: function (config) {
+        this.callParent(arguments);
+        if (!this.config.allowed_values || this.config.allowed_values.length == 0) {
+            throw "Cannot create Rally.TechnicalServices.CFDCalculator without allowed_values";
+        }
+    },
+        
+    runCalculation: function(snaps){
+        //console.log(snaps);
+        return this.callParent(arguments);
     },
     /*
      * How to measure
@@ -32,52 +57,24 @@ Ext.define("Rally.TechnicalServices.CFDCalculator", {
      *      filterValues: (when f=filteredSum) used to decide which values of filterField to show
      */
     getMetrics: function () {
-        var allowed_values = ['Defined','In-Progress', 'Completed'];
-        return [
-            {
-                f: 'groupBySum',
-                field: 'PlanEstimate', 
-                groupByField: 'ScheduleState', 
-                allowedValues: allowed_values,
-                display:'area'
-            }/*,
-            {
-                f: 'groupByCount', 
-                groupByField: 'ScheduleState', 
-                allowedValues: allowed_values, 
-                display: 'area'
-            }*/
-        ];
-    },
-    runCalculation: function (snapshots) {
-        var calculatorConfig = this._prepareCalculatorConfig(),
-            seriesConfig = this._buildSeriesConfig(calculatorConfig);
-console.log("seriesConfig",seriesConfig);
-
-        var calculator = this.prepareCalculator(calculatorConfig);
-console.log("calculator", calculator);
-        calculator.addSnapshots(snapshots, this._getStartDate(snapshots), this._getEndDate(snapshots));
-console.log('result',calculator.getResults());
-        var data = this._transformLumenizeDataToHighchartsSeries(calculator, seriesConfig);
-console.log(data);
-        return data;
-    },
-    _transformLumenizeDataToHighchartsSeries: function (calculator, seriesConfig) {
-        var results = calculator.getResults();
-
-        var seriesData = results.seriesData;
-
-        var finalData = {
-            series: this.lumenize.arrayOfMaps_To_HighChartsSeries(seriesData, seriesConfig),
-            categories: this._buildCategoriesFromData(seriesData)
+        
+        var metric = {
+            f: 'groupBySum',
+            field: this.value_field, 
+            groupByField: this.group_by_field, 
+            allowedValues: this.allowed_values,
+            display:'area'
         };
-
-        if (this.enableProjections) {
-            finalData.projections = results.projections;
+                
+        if ( this.group_type == "count" ) {
+            metric.f = 'groupByCount';
         }
-
-        return finalData;
+        
+        return [ metric ];
     },
+    /*
+     * Modified to allow groupBySum/groupByCount to spit out stacked area configs
+     */
     _buildSeriesConfig: function (calculatorConfig) {
         var aggregationConfig = [],
             metrics = calculatorConfig.metrics,
@@ -85,10 +82,21 @@ console.log(data);
 
         for (var i = 0, ilength = metrics.length; i < ilength; i += 1) {
             var metric = metrics[i];
-            if ( metric.f = "groupBySum" ) {
-                if ( ! this.allowed_values ) {
+            if ( metric.f == "groupBySum" || metric.f == "groupByCount") {
+                var type = metric.f.replace(/groupBy/,"");
+                
+                if ( ! metric.allowedValues ) {
                     throw "Rally.TechnicalServices.CFDCalculator requires setting 'allowed_values'";
                 }
+                Ext.Array.each(metric.allowedValues,function(allowed_value){
+                    aggregationConfig.push({
+                        f: type,
+                        name: allowed_value,
+                        type: metric.display || "area",
+                        dashStyle: metric.dashStyle || "Solid",
+                        stack: 1
+                    });
+                });
             } else {
                 aggregationConfig.push({
                     name: metric.as || metric.field,
@@ -110,74 +118,6 @@ console.log(data);
         return aggregationConfig;
     }
 });
-/**
- * a calculator for each day of data,
- * given a snap for that day, will calculate a
- * total count for each value in a metric field (e.g., count the number of items in Defined schedule state)
- * 
- * assumes that each individual snap represents one unique item
- */
- 
- Ext.define('TSDay',{
-    extend: 'Ext.data.Model',
-    group_totals: {},
-    fields: [
-        {name:'JSDate',type:'date',defaultValue:new Date()},
-        {name:'groupByFieldName',type:'string',defaultValue:'ScheduleState'}, /* the name of the field that filters what we count */
-        {name:'metricFieldName',type:'string',defaultValue:'Count'}, /* the name of the field with a value to add (or count), remember the c_! */
-        {name:'Total',type:'number',defaultVale:0}
-    ],
-    constructor: function(data) {
-        this.group_totals = {};
-        this.callParent(arguments);
-    },
-    /**
-     * Given a single lookback snapshot, aggregate data
-     * @param {} snap
-     */
-    addSnap: function(snap){
-        var total = this.get('Total');
-        var group_by_field_name = this.get('groupByFieldName');
-        var metric_field_name = this.get('metricFieldName');
-        
-        var value_in_snap = 0;
-        if ( metric_field_name === "Count" ) {
-            value_in_snap = 1;
-        } else {
-            if (Ext.isNumber(snap.get(metric_field_name))) {
-                value_in_snap = snap.get(metric_field_name);
-            }
-        }
-        total = total + value_in_snap;
-        this.set('Total',total);
-        
-        var snap_value = snap.get(group_by_field_name);
-        
-        if ( Ext.isDefined(snap_value) ) {
-            if ( Ext.isBoolean(snap_value) ) { 
-                if ( snap_value ) { 
-                    snap_value = "true"; 
-                } else { 
-                    snap_value = "false"; 
-                } 
-            }
-            
-            if ( ! snap_value || snap_value == "" ) { snap_value = "None"; }
-            
-            if ( ! this.group_totals[snap_value] ) { this.group_totals[snap_value] = 0; }
-            this.group_totals[snap_value] = this.group_totals[snap_value] + value_in_snap;
-        }
-    },
-    /**
-     * return the aggregated value of totals for a given group (as seen in the groupByFieldName
-     * (assumes if we haven't heard about the field value yet, it's just 0
-     */
-    getGroupTotal: function(field_value){
-        return this.group_totals[field_value] || 0 ;
-    }
-    
- });
-
 /**
  * A link that pops up a version dialog box
  */
@@ -766,114 +706,6 @@ Ext.define('Rally.technicalservices.util.Utilities', {
             result.push(hash[key]);
         }
         return result;
-    },
-    daysBetween: function(begin_date_js,end_date_js,skip_weekends){
-
-        if ( typeof(begin_date_js) == "string" ) {
-            begin_date_js = Rally.util.DateTime.fromIsoString(begin_date_js);
-        }
-        if ( typeof(end_date_js) == "string" ) {
-            end_date_js = Rally.util.DateTime.fromIsoString(end_date_js);
-        }
-        
-        var dDate1 = Ext.clone(begin_date_js).setHours(0,0,0,0);
-        var dDate2 = Ext.clone(end_date_js).setHours(0,0,0,0);
-        
-        if ( dDate1 == dDate2 ) { return 0; }
-        if (typeof dDate1 === "number") { dDate1 = new Date(dDate1); }
-        if (typeof dDate2 === "number") { dDate2 = new Date(dDate2); }
-            
-        if ( !skip_weekends ) {
-            return Math.abs( Rally.util.DateTime.getDifference(dDate1,dDate2,'day') );
-        } else {
-            // from the sOverflow
-            var iWeeks, iDateDiff, iAdjust = 0;
-            if (dDate2 < dDate1) 
-            { 
-                var x = dDate2;
-                dDate2 = dDate1;
-                dDate1 = x;
-            }
-            var iWeekday1 = dDate1.getDay(); // day of week
-            var iWeekday2 = dDate2.getDay();
-            iWeekday1 = (iWeekday1 == 0) ? 7 : iWeekday1; // change Sunday from 0 to 7
-            iWeekday2 = (iWeekday2 == 0) ? 7 : iWeekday2;
-            if ((iWeekday1 > 5) && (iWeekday2 > 5)) iAdjust = 1; // adjustment if both days on weekend
-            iWeekday1 = (iWeekday1 > 5) ? 5 : iWeekday1; // only count weekdays
-            iWeekday2 = (iWeekday2 > 5) ? 5 : iWeekday2;
-    
-            // calculate differnece in weeks (1000mS * 60sec * 60min * 24hrs * 7 days = 604800000)
-            iWeeks = Math.floor((dDate2.getTime() - dDate1.getTime()) / 604800000)
-    
-            if (iWeekday1 <= iWeekday2) {
-              iDateDiff = (iWeeks * 5) + (iWeekday2 - iWeekday1)
-            } else {
-              iDateDiff = ((iWeeks + 1) * 5) - (iWeekday1 - iWeekday2)
-            }
-    
-            iDateDiff -= iAdjust // take into account both days on weekend
-    
-            if ( iDateDiff < 0 ) { iDateDiff = 0; }
-            return (iDateDiff); 
-        }
-    },
-
-    isWeekday: function(check_date) {
-        var weekday = true;
-        var day = check_date.getDay();
-        
-        if ( day === 0 || day === 6 ) {
-            weekday = false;
-        }
-        return weekday;
-    },
-    
-    /*
-     * compress size is the point at which to move to weeks instead of days
-     */
-    arrayOfDaysBetween: function(begin_date_js, end_date_js, skip_weekends, compress_size ) {
-        var the_array = [];
-        if ( typeof(begin_date_js) == "string" ) {
-            begin_date_js = Rally.util.DateTime.fromIsoString(begin_date_js);
-        }
-        if ( typeof(end_date_js) == "string" ) {
-            end_date_js = Rally.util.DateTime.fromIsoString(end_date_js);
-        }
-        if ( begin_date_js > end_date_js ) {
-            var swap_holder = end_date_js;
-            end_date_js = begin_date_js;
-            begin_date_js = swap_holder;
-        }
-                
-        var dDate1 = Ext.clone(begin_date_js).setHours(0,0,0,0);
-        var dDate2 = Ext.clone(end_date_js).setHours(0,0,0,0);
-        
-        var number_of_days = this.daysBetween(begin_date_js,end_date_js,skip_weekends);
-        
-        var add_value = 1;
-        var add_unit = 'day';
-        
-        if ( Ext.isNumber(compress_size) && number_of_days > compress_size ) {
-            add_value = 7;
-        }
-        
-        if ( number_of_days <= 2 ) {
-            add_value = 30;
-            add_unit = 'minute';
-            dDate2 = Ext.clone(end_date_js).setHours(23,59,0,0);
-        }
-       
-        
-        var check_date = new Date(dDate1);
-        
-        while (check_date <= dDate2) {
-            if ( !skip_weekends || this.isWeekday(check_date) || add_value === 7 || add_unit == 'minute' ) {
-                the_array.push(check_date);
-            }
-            check_date = Rally.util.DateTime.add(check_date,add_unit,add_value);
-        }
-        
-        return the_array;
     }
     
 });
@@ -882,51 +714,79 @@ Ext.define('CustomApp', {
     componentCls: 'app',
     logger: new Rally.technicalservices.Logger(),
     items: [
-        {xtype:'container',itemId:'message_box',tpl:'Hello, <tpl>{_refObjectName}</tpl>'},
-        {xtype:'container',itemId:'display_box'},
+        {xtype:'container',itemId:'settings_box'},
+        {xtype:'container',itemId:'display_box',margin:10},
         {xtype:'tsinfolink'}
     ],
     launch: function() {
+        this._makeChart();
+    },
+    _getChartTitle: function(type_path,group_by_field){
+        var type = this._deCamelCase(type_path);
+        var field = this._deCamelCase(group_by_field);
+        
+        return type + " grouped by " + field;
+    },
+    _deCamelCase: function(camelCaseText){
+        var result = camelCaseText.replace( /([A-Z])/g, " $1" );
+        var finalResult = result.charAt(0).toUpperCase() + result.slice(1);
+        return finalResult;
+    },
+    _makeChart: function(group_by_field) {
         var project = this.getContext().getProject().ObjectID;
+        var type_path = "HierarchicalRequirement";
+        var group_by_field = "ScheduleState";
+        var allowed_values = ['Defined','In-Progress', 'Completed', 'Accepted'];
+        var metric_field = "PlanEstimate";
+        
+        var chart_title = this._getChartTitle(type_path,group_by_field);
+        
         
         this.down('#display_box').add({
             xtype:'rallychart',
             storeType: 'Rally.data.lookback.SnapshotStore',
             calculatorType: 'Rally.TechnicalServices.CFDCalculator',
             calculatorConfig: {
-                granularity: 'month',
-                startDate: "2013-12-01T00:00:00.000Z",
-                tz: "America/Anchorage"
+                /*startDate: "2013-12-01T00:00:00.000Z",*/
+                /*tz: "America/Anchorage",*/
+                allowed_values: allowed_values,
+                metric_field: metric_field
             },
             storeConfig: {
                 filters: [
-                    {property:'_TypeHierarchy',value:"HierarchicalRequirement"},
-                    {property:'_ProjectHierarchy', value:project}
+                    {property:'_TypeHierarchy',value: type_path},
+                    {property:'_ProjectHierarchy', value: project}
                 ],
-                hydrate: ["ScheduleState"],
-                fetch: ["ScheduleState","PlanEstimate"]
+                hydrate: [group_by_field],
+                fetch: [group_by_field,metric_field]
             },
             chartConfig: {
                  chart: {
                      zoomType: 'xy'
                  },
                  title: {
-                     text: 'my chart'
+                     text: chart_title
                  },
                  xAxis: {
                      tickmarkPlacement: 'on',
-                     tickInterval: 1,
+                     tickInterval: 30,
                      title: {
-                         text: 'Months'
+                         text: ''
                      }
                  },
                  yAxis: [
                      {
                          title: {
-                             text: 'Count'
+                             text: metric_field
                          }
                      }
-                 ]
+                 ],
+                 plotOptions: {
+                    series: {
+                        marker: { enabled: false },
+                        stacking: 'normal'
+                    }
+                }
             }
         });
     }
