@@ -1,5 +1,17 @@
 // nothing to do
 
+Ext.define('mockSnap',{
+    extend: 'Ext.data.Model',
+    fields: [
+        {name:'ObjectID',type:'int'},
+        {name:'Project',type:'int'},
+        {name:'ScheduleState',type:'string'},
+        {name:'Blocked',type:'boolean'},
+        {name:'c_Effort',type:'float'},
+        {name:'c_Category',type:'string'}
+    ]
+});
+
 /**
 *
 *  Base64 encode / decode

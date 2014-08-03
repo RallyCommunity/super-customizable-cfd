@@ -1,7 +1,7 @@
 {
   "_comment": "This file is used by grunt",
-  "name": "owned-story-grid",
-  "version": "0.1.0",
+  "name": "super-customizable-cfd",
+  "version": "0.2.0",
   "dependencies": {},
   "devDependencies": {
     "grunt": "~0.4.1",

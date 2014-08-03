@@ -4,3 +4,4 @@ _SpecRunner.html
 App-debug.html
 node_modules/
 auth.json
+app.min.js
