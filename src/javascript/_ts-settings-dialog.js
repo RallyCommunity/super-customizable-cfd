@@ -229,7 +229,7 @@ Ext.define('Rally.technicalservices.SettingsDialog',{
     _addDateChoosers: function() {
         var me = this;
         this.down('#start_date_selector_box').add({
-            xtype: 'rallydatefield',
+            xtype: 'datefield',
             fieldLabel: 'Start Date',
             itemId: 'start_date_chooser',
             labelWidth: 75,
@@ -238,7 +238,7 @@ Ext.define('Rally.technicalservices.SettingsDialog',{
         });
         
         this.down('#end_date_selector_box').add({
-            xtype: 'rallydatefield',
+            xtype: 'datefield',
             fieldLabel: 'End Date',
             itemId:'end_date_chooser',
             labelWidth: 75,

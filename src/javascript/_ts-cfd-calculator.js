@@ -23,17 +23,40 @@ Ext.define("Rally.TechnicalServices.CFDCalculator", {
     },
     constructor: function (config) {
         this.callParent(arguments);
-        if (!this.config.allowed_values || this.config.allowed_values.length == 0) {
+
+        if (!this.allowed_values || this.allowed_values.length == 0) {
             throw "Cannot create Rally.TechnicalServices.CFDCalculator without allowed_values";
         }
-        if (!this.config.group_by_field) {
+        if (!this.group_by_field) {
             throw "Cannot create Rally.TechnicalServices.CFDCalculator without group_by_field";
         }
-        if (this.config.group_type == 'sum' && !this.config.value_field) {
+        if (this.group_type == 'sum' && !this.value_field) {
             throw "Cannot create Rally.TechnicalServices.CFDCalculator by sum without value_field";
         }
-    },
         
+        if ( this.StartDate && typeof this.StartDate !== "object" ){
+            throw "Failed to create Rally.TechnicalServices.CFDCalculator: StartDate must be a javascript date";
+        }
+
+        if ( this.EndDate && typeof this.EndDate !== "object" ){
+            throw "Failed to create Rally.TechnicalServices.CFDCalculator: EndDate must be a javascript date";
+        }
+        // switch dates
+        if ( this.StartDate && this.EndDate ) {
+            if ( this.StartDate > this.EndDate ) {
+                var holder = this.StartDate;
+                this.StartDate = this.EndDate;
+                this.EndDate = holder;
+            }
+        }
+        if ( this.StartDate ) {
+            this.StartDate = Rally.util.DateTime.toIsoString(this.StartDate).replace(/T.*$/,"");
+        }
+        if ( this.EndDate ) {
+            this.EndDate = Rally.util.DateTime.toIsoString(this.EndDate).replace(/T.*$/,"");
+        }
+    },
+    
     runCalculation: function(snaps){
         //console.log(snaps);
         return this.callParent(arguments);

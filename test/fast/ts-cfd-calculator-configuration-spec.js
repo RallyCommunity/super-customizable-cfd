@@ -38,4 +38,5 @@ describe("When creatng a TS CFD Calculator",function(){
         } ).toThrow(new Error("Cannot create Rally.TechnicalServices.CFDCalculator by sum without value_field"));
 
     });
+   
 });
