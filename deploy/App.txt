@@ -3,11 +3,11 @@
 <head>
     <title>Super Customizable Cumulative Flow Diagram</title>
     <!--  (c) 2013 Rally Software Development Corp.  All Rights Reserved. -->
-    <!--  Build Date: Sun Aug 03 2014 18:01:20 GMT-0700 (PDT) -->
+    <!--  Build Date: Sun Aug 03 2014 18:59:52 GMT-0700 (PDT) -->
     
     <script type="text/javascript">
-        var APP_BUILD_DATE = "Sun Aug 03 2014 18:01:20 GMT-0700 (PDT)";
-        var CHECKSUM = 25881244630;
+        var APP_BUILD_DATE = "Sun Aug 03 2014 18:59:52 GMT-0700 (PDT)";
+        var CHECKSUM = 27885374632;
     </script>
     
     <script type="text/javascript" src="/apps/2.0rc3/sdk.js"></script>
@@ -34,43 +34,54 @@ Ext.define("Rally.TechnicalServices.CFDCalculator", {
          allowed_values: null,
          granularity: 'day',
          /*
-          * group_type: 'sum' | 'count' whether to count on given field or to count the records
+          * value_type: 'sum' | 'count' whether to count on given field or to count the records
           */
-         group_type: 'sum'
+         value_type: 'sum',
+         endDate: null,
+         startDate: null
     },
     constructor: function (config) {
         this.callParent(arguments);
 
-        if (!this.allowed_values || this.allowed_values.length == 0) {
+        if (this.value_field == 'Count'){
+            this.value_type = 'count';
+        }
+        
+        if (this.value_type == 'sum' && (!this.allowed_values || this.allowed_values.length == 0) ) {
             throw "Cannot create Rally.TechnicalServices.CFDCalculator without allowed_values";
         }
         if (!this.group_by_field) {
             throw "Cannot create Rally.TechnicalServices.CFDCalculator without group_by_field";
         }
-        if (this.group_type == 'sum' && !this.value_field) {
+        if (this.value_type == 'sum' && !this.value_field) {
             throw "Cannot create Rally.TechnicalServices.CFDCalculator by sum without value_field";
         }
         
-        if ( this.StartDate && typeof this.StartDate !== "object" ){
-            throw "Failed to create Rally.TechnicalServices.CFDCalculator: StartDate must be a javascript date";
+        if ( this.startDate == "" ) { this.startDate = null; }
+        if ( this.endDate == "" )   { this.endDate   = null; }
+        
+        if ( this.startDate && typeof this.startDate !== "object" ){
+            throw "Failed to create Rally.TechnicalServices.CFDCalculator: startDate must be a javascript date";
         }
 
-        if ( this.EndDate && typeof this.EndDate !== "object" ){
-            throw "Failed to create Rally.TechnicalServices.CFDCalculator: EndDate must be a javascript date";
+        if ( this.endDate && typeof this.endDate !== "object" ){
+            throw "Failed to create Rally.TechnicalServices.CFDCalculator: endDate must be a javascript date";
         }
+    
+
         // switch dates
-        if ( this.StartDate && this.EndDate ) {
-            if ( this.StartDate > this.EndDate ) {
-                var holder = this.StartDate;
-                this.StartDate = this.EndDate;
-                this.EndDate = holder;
+        if ( this.startDate && this.endDate ) {
+            if ( this.startDate > this.endDate ) {
+                var holder = this.startDate;
+                this.startDate = this.endDate;
+                this.endDate = holder;
             }
         }
-        if ( this.StartDate ) {
-            this.StartDate = Rally.util.DateTime.toIsoString(this.StartDate).replace(/T.*$/,"");
+        if ( this.startDate ) {
+            this.startDate = Rally.util.DateTime.toIsoString(this.startDate).replace(/T.*$/,"");
         }
-        if ( this.EndDate ) {
-            this.EndDate = Rally.util.DateTime.toIsoString(this.EndDate).replace(/T.*$/,"");
+        if ( this.endDate ) {
+            this.endDate = Rally.util.DateTime.toIsoString(this.endDate).replace(/T.*$/,"");
         }
     },
     
@@ -99,11 +110,10 @@ Ext.define("Rally.TechnicalServices.CFDCalculator", {
             display:'area'
         };
                 
-        if ( this.group_type == "count" ) {
+        if ( this.value_type == "count" ) {
             metric.f = 'groupByCount';
         }
         
-        console.log(metric);
         return [ metric ];
     },
     /*
@@ -817,17 +827,15 @@ Ext.define('CustomApp', {
             type: type_path,
             success: function(model){
                 var field = model.getField(group_by_field);
-                console.log(field);
                 var attribute_definition = field.attributeDefinition;
                 if ( attribute_definition && attribute_definition.AttributeType == "BOOLEAN" ) {
-                    deferred.resolve(["true","false"]);
+                    deferred.resolve([true,false]);
                 } else {
                     field.getAllowedValueStore().load({
                         callback: function(values,operation,success) {
                             Ext.Array.each(values, function(value){
                                 allowed_values.push(value.get('StringValue'));
                             });
-                            console.log(allowed_values);
                             deferred.resolve(allowed_values);
                         }
                     });
@@ -846,11 +854,11 @@ Ext.define('CustomApp', {
         var start_date = this.getSetting('start_date');
         var end_date = this.getSetting('end_date');
         
-        var value_field = "PlanEstimate";
+        var value_field = this.getSetting('metric_field');
         
         this.logger.log("Making chart for ", type_path, " on ", group_by_field);
         this.logger.log("  Start Date/End Date: ", start_date, end_date);
-        this.logger.log(" ", typeof start_date, typeof end_date);
+        this.logger.log("  Allowed Values: ", allowed_values);
         
         var chart_title = this._getChartTitle(type_path,group_by_field);
         
@@ -938,9 +946,23 @@ Ext.define('CustomApp', {
             } 
         }]);
     },
+    _addCountToChoices: function(store){
+        store.add({name:'Count',value:'Count',fieldDefinition:{}});
+    },
     _filterOutExceptNumbers: function(store) {
         store.filter([{
             filterFn:function(field){ 
+                var field_name = field.get('name');
+
+                if ( field_name == 'Formatted ID' || field_name == 'Object ID' ) {
+                    return false;
+                }
+                if ( field_name == 'Latest Discussion Age In Minutes' ) {
+                    return false;
+                }
+                
+                if ( field_name == 'Count' ) { return true; }
+                
                 var attribute_definition = field.get('fieldDefinition').attributeDefinition;
                 var attribute_type = null;
                 if ( attribute_definition ) {
@@ -949,7 +971,7 @@ Ext.define('CustomApp', {
                 if (  attribute_type == "QUANTITY" || attribute_type == "INTEGER" || attribute_type == "DECIMAL" ) {
                     return true;
                 }
-                if ( field.get('name') == 'Count' ) { return true; }
+
                 return false;
             } 
         }]);
@@ -1004,6 +1026,32 @@ Ext.define('CustomApp', {
             listeners: {
                 ready: function(field_box) {
                     me._filterOutExceptChoices(field_box.getStore());
+                }
+            },
+            readyEvent: 'ready'
+        },
+        {
+            name: 'metric_field',
+            xtype: 'rallyfieldcombobox',
+            fieldLabel: 'Measure',
+            labelWidth: 100,
+            labelAlign: 'left',
+            minWidth: 200,
+            margin: 10,
+            autoExpand: false,
+            alwaysExpanded: false,
+            handlesEvents: { 
+                select: function(type_picker) {
+                    this.refreshWithNewModelType(type_picker.getValue());
+                },
+                ready: function(type_picker){
+                    this.refreshWithNewModelType(type_picker.getValue());
+                }
+            },
+            listeners: {
+                ready: function(field_box) {
+                    me._addCountToChoices(field_box.getStore());
+                    me._filterOutExceptNumbers(field_box.getStore());
                 }
             },
             readyEvent: 'ready'

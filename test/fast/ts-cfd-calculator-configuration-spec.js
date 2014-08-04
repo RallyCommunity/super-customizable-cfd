@@ -4,7 +4,8 @@ describe("When creatng a TS CFD Calculator",function(){
         expect( function() { 
             Ext.create('Rally.TechnicalServices.CFDCalculator',{
                 group_by_field: 'Fred',
-                group_type: 'count'
+                value_type: 'sum',
+                value_field: 'Sam'
             });
         } ).toThrow(new Error("Cannot create Rally.TechnicalServices.CFDCalculator without allowed_values"));
     });
@@ -13,7 +14,7 @@ describe("When creatng a TS CFD Calculator",function(){
         expect( function() { 
             Ext.create('Rally.TechnicalServices.CFDCalculator',{
                 allowed_values: ['test'],
-                group_type: 'count'
+                value_type: 'count'
             });
         } ).toThrow(new Error("Cannot create Rally.TechnicalServices.CFDCalculator without group_by_field"));
     });
@@ -23,7 +24,7 @@ describe("When creatng a TS CFD Calculator",function(){
             Ext.create('Rally.TechnicalServices.CFDCalculator',{
                 allowed_values: ['test'],
                 group_by_field: 'Fred',
-                group_type: 'count'
+                value_type: 'count'
             });
         } ).not.toThrow();
     });
@@ -33,10 +34,9 @@ describe("When creatng a TS CFD Calculator",function(){
             Ext.create('Rally.TechnicalServices.CFDCalculator',{
                 allowed_values: ['test'],
                 group_by_field: 'Fred',
-                group_type: 'sum'
+                value_type: 'sum'
             });
         } ).toThrow(new Error("Cannot create Rally.TechnicalServices.CFDCalculator by sum without value_field"));
-
     });
    
 });

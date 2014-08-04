@@ -54,7 +54,7 @@ Ext.define('CustomApp', {
                 var field = model.getField(group_by_field);
                 var attribute_definition = field.attributeDefinition;
                 if ( attribute_definition && attribute_definition.AttributeType == "BOOLEAN" ) {
-                    deferred.resolve(["true","false"]);
+                    deferred.resolve([true,false]);
                 } else {
                     field.getAllowedValueStore().load({
                         callback: function(values,operation,success) {
@@ -79,12 +79,11 @@ Ext.define('CustomApp', {
         var start_date = this.getSetting('start_date');
         var end_date = this.getSetting('end_date');
         
-        var value_field = "PlanEstimate";
+        var value_field = this.getSetting('metric_field');
         
         this.logger.log("Making chart for ", type_path, " on ", group_by_field);
         this.logger.log("  Start Date/End Date: ", start_date, end_date);
-        this.logger.log(" ", typeof start_date, typeof end_date);
-        
+        this.logger.log("  Allowed Values: ", allowed_values);
         
         var chart_title = this._getChartTitle(type_path,group_by_field);
         
@@ -172,9 +171,23 @@ Ext.define('CustomApp', {
             } 
         }]);
     },
+    _addCountToChoices: function(store){
+        store.add({name:'Count',value:'Count',fieldDefinition:{}});
+    },
     _filterOutExceptNumbers: function(store) {
         store.filter([{
             filterFn:function(field){ 
+                var field_name = field.get('name');
+
+                if ( field_name == 'Formatted ID' || field_name == 'Object ID' ) {
+                    return false;
+                }
+                if ( field_name == 'Latest Discussion Age In Minutes' ) {
+                    return false;
+                }
+                
+                if ( field_name == 'Count' ) { return true; }
+                
                 var attribute_definition = field.get('fieldDefinition').attributeDefinition;
                 var attribute_type = null;
                 if ( attribute_definition ) {
@@ -183,7 +196,7 @@ Ext.define('CustomApp', {
                 if (  attribute_type == "QUANTITY" || attribute_type == "INTEGER" || attribute_type == "DECIMAL" ) {
                     return true;
                 }
-                if ( field.get('name') == 'Count' ) { return true; }
+
                 return false;
             } 
         }]);
@@ -238,6 +251,32 @@ Ext.define('CustomApp', {
             listeners: {
                 ready: function(field_box) {
                     me._filterOutExceptChoices(field_box.getStore());
+                }
+            },
+            readyEvent: 'ready'
+        },
+        {
+            name: 'metric_field',
+            xtype: 'rallyfieldcombobox',
+            fieldLabel: 'Measure',
+            labelWidth: 100,
+            labelAlign: 'left',
+            minWidth: 200,
+            margin: 10,
+            autoExpand: false,
+            alwaysExpanded: false,
+            handlesEvents: { 
+                select: function(type_picker) {
+                    this.refreshWithNewModelType(type_picker.getValue());
+                },
+                ready: function(type_picker){
+                    this.refreshWithNewModelType(type_picker.getValue());
+                }
+            },
+            listeners: {
+                ready: function(field_box) {
+                    me._addCountToChoices(field_box.getStore());
+                    me._filterOutExceptNumbers(field_box.getStore());
                 }
             },
             readyEvent: 'ready'

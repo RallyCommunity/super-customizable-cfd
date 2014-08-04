@@ -17,22 +17,26 @@ Ext.define("Rally.TechnicalServices.CFDCalculator", {
          allowed_values: null,
          granularity: 'day',
          /*
-          * group_type: 'sum' | 'count' whether to count on given field or to count the records
+          * value_type: 'sum' | 'count' whether to count on given field or to count the records
           */
-         group_type: 'sum',
+         value_type: 'sum',
          endDate: null,
          startDate: null
     },
     constructor: function (config) {
         this.callParent(arguments);
 
-        if (!this.allowed_values || this.allowed_values.length == 0) {
+        if (this.value_field == 'Count'){
+            this.value_type = 'count';
+        }
+        
+        if (this.value_type == 'sum' && (!this.allowed_values || this.allowed_values.length == 0) ) {
             throw "Cannot create Rally.TechnicalServices.CFDCalculator without allowed_values";
         }
         if (!this.group_by_field) {
             throw "Cannot create Rally.TechnicalServices.CFDCalculator without group_by_field";
         }
-        if (this.group_type == 'sum' && !this.value_field) {
+        if (this.value_type == 'sum' && !this.value_field) {
             throw "Cannot create Rally.TechnicalServices.CFDCalculator by sum without value_field";
         }
         
@@ -89,7 +93,7 @@ Ext.define("Rally.TechnicalServices.CFDCalculator", {
             display:'area'
         };
                 
-        if ( this.group_type == "count" ) {
+        if ( this.value_type == "count" ) {
             metric.f = 'groupByCount';
         }
         

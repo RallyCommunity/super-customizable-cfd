@@ -1,4 +1,4 @@
-describe("When making a TS CFD Calculator with group_type set to 'count'",function(){
+describe("When making a TS CFD Calculator with value_type set to 'count'",function(){
     
         
     beforeEach(function() {
@@ -10,7 +10,7 @@ describe("When making a TS CFD Calculator with group_type set to 'count'",functi
         var calculator = Ext.create('Rally.TechnicalServices.CFDCalculator',{
             allowed_values: ['Completed'],
             group_by_field: 'ScheduleState',
-            group_type: 'count'
+            value_type: 'count'
         });
         
         var snap = { 
@@ -34,7 +34,7 @@ describe("When making a TS CFD Calculator with group_type set to 'count'",functi
     it("should make two serieses with one x-axis value when given a two snapshot on same day",function(){
         var calculator = Ext.create('Rally.TechnicalServices.CFDCalculator',{
             allowed_values: ['Completed','Accepted'],
-            group_type: 'count',
+            value_type: 'count',
             group_by_field: 'ScheduleState'
         });
         
@@ -71,7 +71,7 @@ describe("When making a TS CFD Calculator with group_type set to 'count'",functi
         var calculator = Ext.create('Rally.TechnicalServices.CFDCalculator',{
             allowed_values: ['Completed','Accepted'],
             group_by_field: 'ScheduleState',
-            group_type: 'count'
+            value_type: 'count'
         });
         
         var snap1 = { 
@@ -113,7 +113,7 @@ describe("When making a TS CFD Calculator with group_type set to 'count'",functi
         var calculator = Ext.create('Rally.TechnicalServices.CFDCalculator',{
             allowed_values: ['Completed','Accepted'],
             group_by_field: 'ScheduleState',
-            group_type: 'count'
+            value_type: 'count'
         });
         
         var snap1 = { 

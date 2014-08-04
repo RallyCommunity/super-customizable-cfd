@@ -5,7 +5,7 @@ describe("When creatng a TS CFD Calculator and setting date values",function(){
             Ext.create('Rally.TechnicalServices.CFDCalculator',{
                 allowed_values: ['test'],
                 group_by_field: 'Fred',
-                group_type: 'count',
+                value_type: 'count',
                 startDate: "03/03/2014"
             });
         } ).toThrow(new Error("Failed to create Rally.TechnicalServices.CFDCalculator: startDate must be a javascript date"));
@@ -16,7 +16,7 @@ describe("When creatng a TS CFD Calculator and setting date values",function(){
             Ext.create('Rally.TechnicalServices.CFDCalculator',{
                 allowed_values: ['test'],
                 group_by_field: 'Fred',
-                group_type: 'count',
+                value_type: 'count',
                 endDate: "03/03/2014"
             });
         } ).toThrow(new Error("Failed to create Rally.TechnicalServices.CFDCalculator: endDate must be a javascript date"));
@@ -28,7 +28,7 @@ describe("When creatng a TS CFD Calculator and setting date values",function(){
         var calculator = Ext.create('Rally.TechnicalServices.CFDCalculator',{
             allowed_values: ['test'],
             group_by_field: 'Fred',
-            group_type: 'count',
+            value_type: 'count',
             endDate: end_date
         });
         
@@ -41,7 +41,7 @@ describe("When creatng a TS CFD Calculator and setting date values",function(){
         var calculator = Ext.create('Rally.TechnicalServices.CFDCalculator',{
             allowed_values: ['test'],
             group_by_field: 'Fred',
-            group_type: 'count',
+            value_type: 'count',
             startDate: start_date
         });
         
@@ -55,7 +55,7 @@ describe("When creatng a TS CFD Calculator and setting date values",function(){
         var calculator = Ext.create('Rally.TechnicalServices.CFDCalculator',{
             allowed_values: ['test'],
             group_by_field: 'Fred',
-            group_type: 'count',
+            value_type: 'count',
             startDate: start_date,
             endDate: end_date
         });
@@ -71,7 +71,7 @@ describe("When creatng a TS CFD Calculator and setting date values",function(){
         var calculator = Ext.create('Rally.TechnicalServices.CFDCalculator',{
             allowed_values: ['test'],
             group_by_field: 'Fred',
-            group_type: 'count',
+            value_type: 'count',
             startDate: start_date,
             endDate: end_date
         });
@@ -87,7 +87,7 @@ describe("When creatng a TS CFD Calculator and setting date values",function(){
         var calculator = Ext.create('Rally.TechnicalServices.CFDCalculator',{
             allowed_values: ['test'],
             group_by_field: 'Fred',
-            group_type: 'count',
+            value_type: 'count',
             startDate: "",
             endDate: ""
         });
