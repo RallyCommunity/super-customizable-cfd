@@ -19,7 +19,9 @@ Ext.define("Rally.TechnicalServices.CFDCalculator", {
          /*
           * group_type: 'sum' | 'count' whether to count on given field or to count the records
           */
-         group_type: 'sum'
+         group_type: 'sum',
+         endDate: null,
+         startDate: null
     },
     constructor: function (config) {
         this.callParent(arguments);
@@ -34,26 +36,31 @@ Ext.define("Rally.TechnicalServices.CFDCalculator", {
             throw "Cannot create Rally.TechnicalServices.CFDCalculator by sum without value_field";
         }
         
-        if ( this.StartDate && typeof this.StartDate !== "object" ){
-            throw "Failed to create Rally.TechnicalServices.CFDCalculator: StartDate must be a javascript date";
+        if ( this.startDate == "" ) { this.startDate = null; }
+        if ( this.endDate == "" )   { this.endDate   = null; }
+        
+        if ( this.startDate && typeof this.startDate !== "object" ){
+            throw "Failed to create Rally.TechnicalServices.CFDCalculator: startDate must be a javascript date";
         }
 
-        if ( this.EndDate && typeof this.EndDate !== "object" ){
-            throw "Failed to create Rally.TechnicalServices.CFDCalculator: EndDate must be a javascript date";
+        if ( this.endDate && typeof this.endDate !== "object" ){
+            throw "Failed to create Rally.TechnicalServices.CFDCalculator: endDate must be a javascript date";
         }
+    
+
         // switch dates
-        if ( this.StartDate && this.EndDate ) {
-            if ( this.StartDate > this.EndDate ) {
-                var holder = this.StartDate;
-                this.StartDate = this.EndDate;
-                this.EndDate = holder;
+        if ( this.startDate && this.endDate ) {
+            if ( this.startDate > this.endDate ) {
+                var holder = this.startDate;
+                this.startDate = this.endDate;
+                this.endDate = holder;
             }
         }
-        if ( this.StartDate ) {
-            this.StartDate = Rally.util.DateTime.toIsoString(this.StartDate).replace(/T.*$/,"");
+        if ( this.startDate ) {
+            this.startDate = Rally.util.DateTime.toIsoString(this.startDate).replace(/T.*$/,"");
         }
-        if ( this.EndDate ) {
-            this.EndDate = Rally.util.DateTime.toIsoString(this.EndDate).replace(/T.*$/,"");
+        if ( this.endDate ) {
+            this.endDate = Rally.util.DateTime.toIsoString(this.endDate).replace(/T.*$/,"");
         }
     },
     
@@ -86,7 +93,6 @@ Ext.define("Rally.TechnicalServices.CFDCalculator", {
             metric.f = 'groupByCount';
         }
         
-        console.log(metric);
         return [ metric ];
     },
     /*

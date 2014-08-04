@@ -52,7 +52,6 @@ Ext.define('CustomApp', {
             type: type_path,
             success: function(model){
                 var field = model.getField(group_by_field);
-                console.log(field);
                 var attribute_definition = field.attributeDefinition;
                 if ( attribute_definition && attribute_definition.AttributeType == "BOOLEAN" ) {
                     deferred.resolve(["true","false"]);
@@ -62,7 +61,6 @@ Ext.define('CustomApp', {
                             Ext.Array.each(values, function(value){
                                 allowed_values.push(value.get('StringValue'));
                             });
-                            console.log(allowed_values);
                             deferred.resolve(allowed_values);
                         }
                     });
@@ -86,6 +84,7 @@ Ext.define('CustomApp', {
         this.logger.log("Making chart for ", type_path, " on ", group_by_field);
         this.logger.log("  Start Date/End Date: ", start_date, end_date);
         this.logger.log(" ", typeof start_date, typeof end_date);
+        
         
         var chart_title = this._getChartTitle(type_path,group_by_field);
         
