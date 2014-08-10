@@ -77,10 +77,6 @@ Ext.define("Rally.TechnicalServices.CFDCalculator", {
         if ( this.startDate ) { this.startDate = this.startDate.replace(/T.*$/,""); }
         if ( this.endDate ) { this.endDate = this.endDate.replace(/T.*$/,""); }
     },
-    runCalculation: function(snaps){
-        //console.log(snaps);
-        return this.callParent(arguments);
-    },
     /*
      * How to measure
      * 
@@ -153,19 +149,41 @@ Ext.define("Rally.TechnicalServices.CFDCalculator", {
 
         return aggregationConfig;
     },
+    /*
+     * WSAPI will give us allowed values that include "", but the
+     * snapshot will actually say null
+     * 
+     */
+    _convertNullToBlank:function(snapshots){
+        var number_of_snapshots = snapshots.length;
+        for ( var i=0;i<number_of_snapshots;i++ ) {
+            if ( snapshots[i][this.group_by_field] === null ) {
+                snapshots[i][this.group_by_field] = "";
+            }
+        }
+        return snapshots;
+    },
     // override runCalculation to change false to "false" because highcharts doesn't like it
     runCalculation: function (snapshots) {
+        
         var calculatorConfig = this._prepareCalculatorConfig(),
             seriesConfig = this._buildSeriesConfig(calculatorConfig);
 
         var calculator = this.prepareCalculator(calculatorConfig);
-        calculator.addSnapshots(snapshots, this._getStartDate(snapshots), this._getEndDate(snapshots));
+        
+        var clean_snapshots = this._convertNullToBlank(snapshots);
+        
+        calculator.addSnapshots(snapshots, this._getStartDate(clean_snapshots), this._getEndDate(clean_snapshots));
 
         var chart_data = this._transformLumenizeDataToHighchartsSeries(calculator, seriesConfig);
         
         // check for false
         Ext.Array.each(chart_data.series,function(series){
-            if (series.name == false) {
+            if ( series.name === "" ) {
+                series.name = "None";
+            }
+            
+            if (series.name === false) {
                 series.name = "False";
             }
             
@@ -174,7 +192,7 @@ Ext.define("Rally.TechnicalServices.CFDCalculator", {
             }
         });
         
-        return chart_data;
+        console.log(chart_data);
     }
         
         
