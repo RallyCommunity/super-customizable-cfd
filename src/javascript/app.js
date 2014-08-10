@@ -24,8 +24,14 @@ Ext.define('CustomApp', {
     _getChartTitle: function(type_path,group_by_field){
         var type = this._deCamelCase(type_path);
         var field = this._deCamelCase(group_by_field);
+        var main_title = type + " grouped by " + field;
         
-        return type + " grouped by " + field;
+        var title = main_title;
+        var query_string = this.getSetting('query_string');
+        if ( query_string ) {
+            title += "<br/>Filtered with " + query_string;
+        }
+        return title;
     },
     _deCamelCase: function(camelCaseText){
         this.logger.log("_deCamelCase",camelCaseText);
@@ -40,7 +46,7 @@ Ext.define('CustomApp', {
     _preProcess: function() {
         this._getAllowedValues().then({
             scope: this,
-            success:this._makeChart,
+            success:this._getOIDsAndMakeChart,
             failure:function(message){
                 this.down('#display_box').add({xtype:'container',html:'message'});
             }
@@ -75,7 +81,62 @@ Ext.define('CustomApp', {
         });
         return deferred.promise;
     },
-    _makeChart: function(allowed_values) {
+    _findOIDsByQuery: function(model,query_string) {
+        this.logger.log("_findOIDsByQuery");
+        this.setLoading("Loading Filtered Data");
+
+        var deferred = Ext.create('Deft.Deferred');
+        
+        var filter = Ext.create('TSStringFilter',{query_string:query_string});
+        
+        Ext.create('Rally.data.WsapiDataStore',{
+            model: model,
+            autoLoad: true,
+            limit: 'Infinity',
+            filters: filter,
+            fetch: ['ObjectID'],
+            listeners: {
+                scope: this,
+                load: function(store,items,successful,opts){
+                    this.logger.log("wsapi load",successful,opts);
+                    if ( successful ) {
+                        var oids = [];
+                        Ext.Array.each(items, function(item){
+                            oids.push(item.get('ObjectID'));
+                        });
+                        this.logger.log("back from wsapi with",oids);
+                        this.setLoading(false);
+                        deferred.resolve(oids);
+                    } else {
+                        this.setLoading(false);
+                        deferred.reject("Error loading filter");
+                    }
+                }
+            }
+        });
+        return deferred.promise;
+    },
+    _getOIDsAndMakeChart: function(allowed_values) {
+        var type_path = this.getSetting('type_path');
+        var query_string = this.getSetting('query_string');
+        
+        if ( query_string ) { 
+            this.logger.log("Using query:", query_string);
+            
+            this._findOIDsByQuery(type_path, query_string).then({
+                scope: this,
+                success: function(oids){
+                    this._makeChart(allowed_values,oids);
+                },
+                failure: function(error) {
+                    alert("Error while trying to apply filter");
+                }
+            });
+        } else {
+            this._makeChart(allowed_values,null);
+        }
+    },
+    _makeChart: function(allowed_values,allowed_oids) {
         this.down('#display_box').removeAll();
         
         var project = this.getContext().getProject().ObjectID;
@@ -102,6 +163,7 @@ Ext.define('CustomApp', {
                 endDate: end_date,/*
                 /*tz: "America/Anchorage",*/
                 allowed_values: allowed_values,
+                allowed_oids: allowed_oids,
                 value_field: value_field,
                 group_by_field: group_by_field
             },
@@ -305,6 +367,15 @@ Ext.define('CustomApp', {
             labelAlign: 'left',
             minWidth: 200,
             margin: 10
+        },
+        {
+            xtype:'textareafield',
+            grow: true,
+            name:'query_string',
+            labelAlign: 'top',
+            width: 250,
+            margin: 10,
+            fieldLabel:'Limit to items that currently meet this query:'
         }];
     },
     //showSettings:  Override to add showing when external + scrolling
