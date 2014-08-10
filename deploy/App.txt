@@ -3,11 +3,11 @@
 <head>
     <title>Super Customizable Cumulative Flow Diagram</title>
     <!--  (c) 2013 Rally Software Development Corp.  All Rights Reserved. -->
-    <!--  Build Date: Sun Aug 10 2014 11:14:27 GMT-0700 (PDT) -->
+    <!--  Build Date: Sun Aug 10 2014 15:04:50 GMT-0700 (PDT) -->
     
     <script type="text/javascript">
-        var APP_BUILD_DATE = "Sun Aug 10 2014 11:14:27 GMT-0700 (PDT)";
-        var CHECKSUM = 30882528939;
+        var APP_BUILD_DATE = "Sun Aug 10 2014 15:04:50 GMT-0700 (PDT)";
+        var CHECKSUM = 31371213599;
     </script>
     
     <script type="text/javascript" src="/apps/2.0rc3/sdk.js"></script>
@@ -182,7 +182,6 @@ Ext.define("Rally.TechnicalServices.CFDCalculator", {
     },
     // override runCalculation to change false to "false" because highcharts doesn't like it
     runCalculation: function (snapshots) {
-        console.log(snapshots);
         
         var calculatorConfig = this._prepareCalculatorConfig(),
             seriesConfig = this._buildSeriesConfig(calculatorConfig);
@@ -210,7 +209,6 @@ Ext.define("Rally.TechnicalServices.CFDCalculator", {
             }
         });
         
-        console.log(chart_data);
         return chart_data;
     }
         
@@ -865,9 +863,14 @@ Ext.define('CustomApp', {
         return type + " grouped by " + field;
     },
     _deCamelCase: function(camelCaseText){
-        var result = camelCaseText.replace( /([A-Z])/g, " $1" );
-        var finalResult = result.charAt(0).toUpperCase() + result.slice(1);
-        return finalResult;
+        this.logger.log("_deCamelCase",camelCaseText);
+        
+        var spaced_out_text = camelCaseText.replace( /([A-Z])/g, " $1" );
+        var initial_cap_text = spaced_out_text.charAt(0).toUpperCase() + spaced_out_text.slice(1);
+        var removed_custom_field_prefix = initial_cap_text.replace(/^C_ /,"");
+        
+        this.logger.log(" .. ", removed_custom_field_prefix);
+        return removed_custom_field_prefix;
     },
     _preProcess: function() {
         this._getAllowedValues().then({
@@ -923,6 +926,7 @@ Ext.define('CustomApp', {
         this.logger.log("  Allowed Values: ", allowed_values);
         
         var chart_title = this._getChartTitle(type_path,group_by_field);
+        this.logger.log("  Title: ", chart_title);
         
         this.down('#display_box').add({
             xtype:'rallychart',

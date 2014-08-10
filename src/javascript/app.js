@@ -28,9 +28,14 @@ Ext.define('CustomApp', {
         return type + " grouped by " + field;
     },
     _deCamelCase: function(camelCaseText){
-        var result = camelCaseText.replace( /([A-Z])/g, " $1" );
-        var finalResult = result.charAt(0).toUpperCase() + result.slice(1);
-        return finalResult;
+        this.logger.log("_deCamelCase",camelCaseText);
+        
+        var spaced_out_text = camelCaseText.replace( /([A-Z])/g, " $1" );
+        var initial_cap_text = spaced_out_text.charAt(0).toUpperCase() + spaced_out_text.slice(1);
+        var removed_custom_field_prefix = initial_cap_text.replace(/^C_ /,"");
+        
+        this.logger.log(" .. ", removed_custom_field_prefix);
+        return removed_custom_field_prefix;
     },
     _preProcess: function() {
         this._getAllowedValues().then({
@@ -86,6 +91,7 @@ Ext.define('CustomApp', {
         this.logger.log("  Allowed Values: ", allowed_values);
         
         var chart_title = this._getChartTitle(type_path,group_by_field);
+        this.logger.log("  Title: ", chart_title);
         
         this.down('#display_box').add({
             xtype:'rallychart',

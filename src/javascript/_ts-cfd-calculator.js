@@ -192,7 +192,7 @@ Ext.define("Rally.TechnicalServices.CFDCalculator", {
             }
         });
         
-        console.log(chart_data);
+        return chart_data;
     }
         
         
