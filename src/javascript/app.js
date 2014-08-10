@@ -276,8 +276,10 @@ Ext.define('CustomApp', {
             },
             listeners: {
                 ready: function(field_box) {
+                    console.log(field_box.getValue());
                     me._addCountToChoices(field_box.getStore());
                     me._filterOutExceptNumbers(field_box.getStore());
+                    field_box.setValue( field_box.getStore().getAt(0) );
                 }
             },
             readyEvent: 'ready'
