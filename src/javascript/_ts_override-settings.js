@@ -1,20 +1,27 @@
-Ext.override(Rally.app.AppSettings,{
-    
-    
-    /*
-     * Change so that values returned are not just strings
-     */
-    _saveAppGlobalScopedSettings: function() {
-        var globalAppSettings = this.getAppScopedSettingsForm().getValues(false,false,false,true);
 
-        Ext.apply(this.settings, globalAppSettings);
+Ext.override(Rally.ui.DateField,{
+    getSubmitValue: function() {
+        return Rally.util.DateTime.toIsoString(this.getValue());
+    },
+    rawToValue: function(rawValue) {
+        console.log('raw value',rawValue);
 
-        return Rally.data.PreferenceManager.update({
-            appID: this.getContext() && this.getContext().get('appID'),
-            settings: globalAppSettings,
-            project: null,
-            workspace: null,
-            scope: this
-        });
+        var iso_string = null;
+        if ( rawValue && typeof rawValue == 'object' ) {
+            iso_string = Rally.util.DateTime.fromIsoString(rawValue);
+            if ( /NaN/.test(iso_string) ) { 
+                iso_string = null;
+            }
+        }
+        
+        if ( rawValue && typeof rawValue == 'string' ) {
+            // test that it has dashes
+            if ( ! /-/.test(rawValue) ) {
+                iso_string = null;
+            }
+        }
+
+        return iso_string;
     }
 });
+

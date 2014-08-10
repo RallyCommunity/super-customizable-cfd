@@ -209,6 +209,7 @@ Ext.define('CustomApp', {
     //getSettingsFields:  Override for App    
     getSettingsFields: function() {
         var me = this;
+        
         return [
         {
             name: 'type_path',

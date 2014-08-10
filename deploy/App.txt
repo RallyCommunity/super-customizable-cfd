@@ -3,11 +3,11 @@
 <head>
     <title>Super Customizable Cumulative Flow Diagram</title>
     <!--  (c) 2013 Rally Software Development Corp.  All Rights Reserved. -->
-    <!--  Build Date: Sun Aug 03 2014 18:59:52 GMT-0700 (PDT) -->
+    <!--  Build Date: Sun Aug 10 2014 10:07:31 GMT-0700 (PDT) -->
     
     <script type="text/javascript">
-        var APP_BUILD_DATE = "Sun Aug 03 2014 18:59:52 GMT-0700 (PDT)";
-        var CHECKSUM = 27885374632;
+        var APP_BUILD_DATE = "Sun Aug 10 2014 10:07:31 GMT-0700 (PDT)";
+        var CHECKSUM = 28615237829;
     </script>
     
     <script type="text/javascript" src="/apps/2.0rc3/sdk.js"></script>
@@ -57,18 +57,31 @@ Ext.define("Rally.TechnicalServices.CFDCalculator", {
             throw "Cannot create Rally.TechnicalServices.CFDCalculator by sum without value_field";
         }
         
+        this._prepareDates();
+        
+    },
+    /*
+     * The goal is to have two dates, in order, that are ISO strings
+     */
+    _prepareDates: function() {
         if ( this.startDate == "" ) { this.startDate = null; }
         if ( this.endDate == "" )   { this.endDate   = null; }
         
-        if ( this.startDate && typeof this.startDate !== "object" ){
-            throw "Failed to create Rally.TechnicalServices.CFDCalculator: startDate must be a javascript date";
+        if ( this.startDate && typeof(this.startDate) === 'object' ) {
+            this.startDate = Rally.util.DateTime.toIsoString(this.startDate);
+        }
+        if ( this.endDate && typeof(this.endDate) === 'object' ) {
+            this.endDate = Rally.util.DateTime.toIsoString(this.endDate);
+        }
+        
+        if ( this.startDate && ! /-/.test(this.startDate)  ){
+            throw "Failed to create Rally.TechnicalServices.CFDCalculator: startDate must be a javascript date or ISO date string";
         }
 
-        if ( this.endDate && typeof this.endDate !== "object" ){
-            throw "Failed to create Rally.TechnicalServices.CFDCalculator: endDate must be a javascript date";
+        if ( this.endDate && ! /-/.test(this.endDate)  ){
+            throw "Failed to create Rally.TechnicalServices.CFDCalculator: endDate must be a javascript date or ISO date string";
         }
     
-
         // switch dates
         if ( this.startDate && this.endDate ) {
             if ( this.startDate > this.endDate ) {
@@ -77,14 +90,10 @@ Ext.define("Rally.TechnicalServices.CFDCalculator", {
                 this.endDate = holder;
             }
         }
-        if ( this.startDate ) {
-            this.startDate = Rally.util.DateTime.toIsoString(this.startDate).replace(/T.*$/,"");
-        }
-        if ( this.endDate ) {
-            this.endDate = Rally.util.DateTime.toIsoString(this.endDate).replace(/T.*$/,"");
-        }
+        
+        if ( this.startDate ) { this.startDate = this.startDate.replace(/T.*$/,""); }
+        if ( this.endDate ) { this.endDate = this.endDate.replace(/T.*$/,""); }
     },
-    
     runCalculation: function(snaps){
         //console.log(snaps);
         return this.callParent(arguments);
@@ -742,26 +751,34 @@ Ext.override(Rally.data.util.QueryStringParser,{
         return iso_at_midnight;
     }
 });
-Ext.override(Rally.app.AppSettings,{
-    
-    
-    /*
-     * Change so that values returned are not just strings
-     */
-    _saveAppGlobalScopedSettings: function() {
-        var globalAppSettings = this.getAppScopedSettingsForm().getValues(false,false,false,true);
 
-        Ext.apply(this.settings, globalAppSettings);
+Ext.override(Rally.ui.DateField,{
+    getSubmitValue: function() {
+        return Rally.util.DateTime.toIsoString(this.getValue());
+    },
+    rawToValue: function(rawValue) {
+        console.log('raw value',rawValue);
 
-        return Rally.data.PreferenceManager.update({
-            appID: this.getContext() && this.getContext().get('appID'),
-            settings: globalAppSettings,
-            project: null,
-            workspace: null,
-            scope: this
-        });
+        var iso_string = null;
+        if ( rawValue && typeof rawValue == 'object' ) {
+            iso_string = Rally.util.DateTime.fromIsoString(rawValue);
+            if ( /NaN/.test(iso_string) ) { 
+                iso_string = null;
+            }
+        }
+        
+        if ( rawValue && typeof rawValue == 'string' ) {
+            // test that it has dashes
+            if ( ! /-/.test(rawValue) ) {
+                iso_string = null;
+            }
+        }
+
+        return iso_string;
     }
 });
+
+
 Ext.define('Rally.technicalservices.util.Utilities', {
     singleton: true,
     hashToArray: function(hash) {
@@ -984,6 +1001,7 @@ Ext.define('CustomApp', {
     //getSettingsFields:  Override for App    
     getSettingsFields: function() {
         var me = this;
+        
         return [
         {
             name: 'type_path',

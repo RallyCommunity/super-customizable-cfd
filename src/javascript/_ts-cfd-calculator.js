@@ -40,18 +40,31 @@ Ext.define("Rally.TechnicalServices.CFDCalculator", {
             throw "Cannot create Rally.TechnicalServices.CFDCalculator by sum without value_field";
         }
         
+        this._prepareDates();
+        
+    },
+    /*
+     * The goal is to have two dates, in order, that are ISO strings
+     */
+    _prepareDates: function() {
         if ( this.startDate == "" ) { this.startDate = null; }
         if ( this.endDate == "" )   { this.endDate   = null; }
         
-        if ( this.startDate && typeof this.startDate !== "object" ){
-            throw "Failed to create Rally.TechnicalServices.CFDCalculator: startDate must be a javascript date";
+        if ( this.startDate && typeof(this.startDate) === 'object' ) {
+            this.startDate = Rally.util.DateTime.toIsoString(this.startDate);
+        }
+        if ( this.endDate && typeof(this.endDate) === 'object' ) {
+            this.endDate = Rally.util.DateTime.toIsoString(this.endDate);
+        }
+        
+        if ( this.startDate && ! /-/.test(this.startDate)  ){
+            throw "Failed to create Rally.TechnicalServices.CFDCalculator: startDate must be a javascript date or ISO date string";
         }
 
-        if ( this.endDate && typeof this.endDate !== "object" ){
-            throw "Failed to create Rally.TechnicalServices.CFDCalculator: endDate must be a javascript date";
+        if ( this.endDate && ! /-/.test(this.endDate)  ){
+            throw "Failed to create Rally.TechnicalServices.CFDCalculator: endDate must be a javascript date or ISO date string";
         }
     
-
         // switch dates
         if ( this.startDate && this.endDate ) {
             if ( this.startDate > this.endDate ) {
@@ -60,14 +73,10 @@ Ext.define("Rally.TechnicalServices.CFDCalculator", {
                 this.endDate = holder;
             }
         }
-        if ( this.startDate ) {
-            this.startDate = Rally.util.DateTime.toIsoString(this.startDate).replace(/T.*$/,"");
-        }
-        if ( this.endDate ) {
-            this.endDate = Rally.util.DateTime.toIsoString(this.endDate).replace(/T.*$/,"");
-        }
+        
+        if ( this.startDate ) { this.startDate = this.startDate.replace(/T.*$/,""); }
+        if ( this.endDate ) { this.endDate = this.endDate.replace(/T.*$/,""); }
     },
-    
     runCalculation: function(snaps){
         //console.log(snaps);
         return this.callParent(arguments);
