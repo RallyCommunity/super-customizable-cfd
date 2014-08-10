@@ -1,4 +1,4 @@
-describe("When making a TS CFD Calculator with group_by set to 'sum'",function(){
+describe("When making a TS CFD Calculator with value type set to 'sum'",function(){
     
     beforeEach(function() {
         this.addMatchers(customMatchers);
@@ -8,7 +8,7 @@ describe("When making a TS CFD Calculator with group_by set to 'sum'",function()
         var calculator = Ext.create('Rally.TechnicalServices.CFDCalculator',{
             allowed_values: ['Completed'],
             group_by_field: 'ScheduleState',
-            group_by: 'sum',
+            value_type: 'sum',
             value_field: 'PlanEstimate'
         });
         
@@ -37,7 +37,7 @@ describe("When making a TS CFD Calculator with group_by set to 'sum'",function()
         var calculator = Ext.create('Rally.TechnicalServices.CFDCalculator',{
             allowed_values: ['Completed','Accepted'],
             group_by_field: 'ScheduleState',
-            group_by: 'sum',
+            value_type: 'sum',
             value_field: 'PlanEstimate'
         });
         
@@ -78,7 +78,7 @@ describe("When making a TS CFD Calculator with group_by set to 'sum'",function()
         var calculator = Ext.create('Rally.TechnicalServices.CFDCalculator',{
             allowed_values: ['Completed','Accepted'],
             group_by_field: 'ScheduleState',
-            group_by: 'sum',
+            value_type: 'sum',
             value_field: 'PlanEstimate'
         });
         
@@ -119,7 +119,7 @@ describe("When making a TS CFD Calculator with group_by set to 'sum'",function()
         var calculator = Ext.create('Rally.TechnicalServices.CFDCalculator',{
             allowed_values: ['Completed','Accepted'],
             group_by_field: 'ScheduleState',
-            group_by: 'sum',
+            value_type: 'sum',
             value_field: 'PlanEstimate'
         });
         

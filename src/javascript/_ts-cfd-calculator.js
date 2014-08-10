@@ -152,5 +152,30 @@ Ext.define("Rally.TechnicalServices.CFDCalculator", {
         }
 
         return aggregationConfig;
+    },
+    // override runCalculation to change false to "false" because highcharts doesn't like it
+    runCalculation: function (snapshots) {
+        var calculatorConfig = this._prepareCalculatorConfig(),
+            seriesConfig = this._buildSeriesConfig(calculatorConfig);
+
+        var calculator = this.prepareCalculator(calculatorConfig);
+        calculator.addSnapshots(snapshots, this._getStartDate(snapshots), this._getEndDate(snapshots));
+
+        var chart_data = this._transformLumenizeDataToHighchartsSeries(calculator, seriesConfig);
+        
+        // check for false
+        Ext.Array.each(chart_data.series,function(series){
+            if (series.name == false) {
+                series.name = "False";
+            }
+            
+            if (series.name == true) {
+                series.name = "True";
+            }
+        });
+        
+        return chart_data;
     }
+        
+        
 });

@@ -166,7 +166,6 @@ Ext.define('CustomApp', {
                 if ( field.get('name') === 'State' ) { 
                     return true;
                 }
-                //console.log(field.get('name'),field.get('fieldDefinition').attributeDefinition.AttributeType);
                 return false;
             } 
         }]);
@@ -276,7 +275,6 @@ Ext.define('CustomApp', {
             },
             listeners: {
                 ready: function(field_box) {
-                    console.log(field_box.getValue());
                     me._addCountToChoices(field_box.getStore());
                     me._filterOutExceptNumbers(field_box.getStore());
                     field_box.setValue( field_box.getStore().getAt(0) );
