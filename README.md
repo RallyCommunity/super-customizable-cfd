@@ -27,6 +27,7 @@ This is a new chart.  You can choose the record type to make a date-driven area 
  * Settings are now accessed from the gear menu
  * The chart now uses the Luminize calculator to analyze snapshots
  * Grouping on fields with allowed values that include booleans or no selection now display series correctly
+ * App uses rc3 SDK
 
 ### First Load
 
