@@ -9,6 +9,7 @@
     </script>
     
     <script type="text/javascript" src="<%= options.server %>/apps/<%= options.sdk %>/sdk-debug.js"></script>
+    <script type="text/javascript" src="<%= options.server %>/apps/<%= options.sdk %>/lib/analytics/analytics-all.js"></script>
     
     <% with (scripts) { %>
     <% [].concat(jasmine, vendor, reporters).forEach(function(script){ %>

@@ -62,13 +62,13 @@ module.exports = function(grunt) {
                 },
                 prod: {
                     src: 'templates/App-tpl.html',
-                    dest: 'deploy/App.html',
+                    dest: 'deploy/App.txt',
                     engine: 'underscore',
                     variables: config
                 },
                 ugly: {
                     src: 'templates/App-ugly-tpl.html',
-                    dest: 'deploy/Ugly.html',
+                    dest: 'deploy/Ugly.txt',
                     engine: 'underscore',
                     variables: config                    
                 }
@@ -108,10 +108,11 @@ module.exports = function(grunt) {
         var fs = require('fs');
         var chk = 0x12345678,
             i;
-        var deploy_file = 'deploy/App.html';
+        var deploy_file = 'deploy/App.txt';
 
         var file = grunt.file.read(deploy_file);
         string = file.replace(/var CHECKSUM = .*;/,"");
+        string = string.replace(/\s/g,"");  //Remove all whitespace from the string.
         
         for (i = 0; i < string.length; i++) {
             chk += (string.charCodeAt(i) * i);
@@ -131,14 +132,14 @@ module.exports = function(grunt) {
     grunt.loadNpmTasks('grunt-contrib-jasmine');
     grunt.loadNpmTasks('grunt-contrib-uglify');
     //tasks
-    grunt.registerTask('default', ['debug','build']);
+    grunt.registerTask('default', ['debug','build','ugly']);
     
     // (uses all the files in src/javascript)
     grunt.registerTask('build', "Create the html for deployment",['template:prod','setChecksum']);
     // 
     grunt.registerTask('debug', "Create an html file that can run in its own tab", ['template:dev']);
     //
-    //grunt.registerTask('ugly', "Create the ugly html for deployment",['uglify:ugly','template:ugly']);
+    grunt.registerTask('ugly', "Create the ugly html for deployment",['uglify:ugly','template:ugly']);
 
     grunt.registerTask('test-fast', "Run tests that don't need to connect to Rally", ['jasmine:fast']);
     grunt.registerTask('test-slow', "Run tests that need to connect to Rally", ['jasmine:slow']);
