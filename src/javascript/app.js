@@ -345,7 +345,13 @@ Ext.define('CustomApp', {
                 ready: function(field_box) {
                     me._addCountToChoices(field_box.getStore());
                     me._filterOutExceptNumbers(field_box.getStore());
-                    field_box.setValue( field_box.getStore().getAt(0) );
+                    var value = me.getSetting('metric_field');
+                    if ( value ) {
+                        field_box.setValue(value);
+                    }
+                    if ( !field_box.getValue() ) {
+                        field_box.setValue( field_box.getStore().getAt(0) );
+                    }
                 }
             },
             readyEvent: 'ready'
@@ -357,7 +363,16 @@ Ext.define('CustomApp', {
             labelWidth: 100,
             labelAlign: 'left',
             minWidth: 200,
-            margin: 10
+            margin: 10/*,
+            listeners: {
+                afterrender: function(date_box){
+                    var value = me.getSetting('start_date');
+                    console.log('afterrender',value);
+                    if ( value ) {
+                        field_box.setValue(value);
+                    }
+                }
+            }*/
         },
         {
             name: 'end_date',
@@ -366,7 +381,16 @@ Ext.define('CustomApp', {
             labelWidth: 100,
             labelAlign: 'left',
             minWidth: 200,
-            margin: 10
+            margin: 10/*,
+            listeners: {
+                boxready: function(date_box){
+                    var value = me.getSetting('end_date');
+                    console.log('boxready',value);
+                    if ( value ) {
+                        date_box.setValue(value);
+                    }
+                }
+            }*/
         },
         {
             xtype:'textareafield',

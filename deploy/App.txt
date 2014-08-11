@@ -2,12 +2,12 @@
 <html>
 <head>
     <title>Super Customizable Cumulative Flow Diagram</title>
-    <!--  (c) 2013 Rally Software Development Corp.  All Rights Reserved. -->
-    <!--  Build Date: Sun Aug 10 2014 16:22:51 GMT-0700 (PDT) -->
+    <!--  (c) 2013,2014 Rally Software Development Corp.  All Rights Reserved. -->
+    <!--  Build Date: Sun Aug 10 2014 17:04:52 GMT-0700 (PDT) -->
     
     <script type="text/javascript">
-        var APP_BUILD_DATE = "Sun Aug 10 2014 16:22:51 GMT-0700 (PDT)";
-        var CHECKSUM = 37385950375;
+        var APP_BUILD_DATE = "Sun Aug 10 2014 17:04:52 GMT-0700 (PDT)";
+        var CHECKSUM = 39841153872;
     </script>
     
     <script type="text/javascript" src="/apps/2.0rc3/sdk.js"></script>
@@ -689,6 +689,52 @@ Ext.define('TSStringFilter',{
         return initial_expression;
     }
 });
+//Ext.override(Rally.app.AppSettings,{
+//    _saveAppGlobalScopedSettings: function() {
+//        var globalAppSettings = this.getAppScopedSettingsForm().getValues(false,false,false,true);
+//        Ext.apply(this.settings, globalAppSettings);
+//
+//        return Rally.data.PreferenceManager.update({
+//            appID: this.getContext() && this.getContext().get('appID'),
+//            settings: globalAppSettings,
+//            project: null,
+//            workspace: null,
+//            scope: this
+//        });
+//    }
+//});
+
+
+Ext.override(Rally.ui.DateField,{
+    getSubmitValue: function() {
+        //console.log('getting submit value', this.getValue());
+        return Rally.util.DateTime.toIsoString(this.getValue());
+    },
+    valueToRaw: function(value) {
+        //console.log('valueToRaw',value);
+
+        if ( Ext.isDate(value) ) {
+            value = Rally.util.DateTime.toIsoString(value).replace(/T.*$/,"");
+        }
+        return value;
+    }
+    ,
+    rawToValue: function(rawValue) {
+        //console.log('raw value',rawValue);
+        var value = rawValue;
+        
+        if ( rawValue && typeof rawValue == 'string' ) {
+            // test that it has dashes
+            if ( /-/.test(rawValue) ) {
+                value = Rally.util.DateTime.fromIsoString(rawValue);
+            }
+        }
+
+        return value;
+    }
+});
+
+
 Ext.override(Rally.data.util.QueryStringParser,{
   applyOperators: function (operators, operator) {
         if (!operators.length) {
@@ -822,34 +868,6 @@ Ext.override(Rally.data.util.QueryStringParser,{
         return iso_at_midnight;
     }
 });
-
-Ext.override(Rally.ui.DateField,{
-    getSubmitValue: function() {
-        return Rally.util.DateTime.toIsoString(this.getValue());
-    },
-    rawToValue: function(rawValue) {
-        console.log('raw value',rawValue);
-
-        var iso_string = null;
-        if ( rawValue && typeof rawValue == 'object' ) {
-            iso_string = Rally.util.DateTime.fromIsoString(rawValue);
-            if ( /NaN/.test(iso_string) ) { 
-                iso_string = null;
-            }
-        }
-        
-        if ( rawValue && typeof rawValue == 'string' ) {
-            // test that it has dashes
-            if ( ! /-/.test(rawValue) ) {
-                iso_string = null;
-            }
-        }
-
-        return iso_string;
-    }
-});
-
-
 Ext.define('Rally.technicalservices.util.Utilities', {
     singleton: true,
     hashToArray: function(hash) {
@@ -1208,7 +1226,13 @@ Ext.define('CustomApp', {
                 ready: function(field_box) {
                     me._addCountToChoices(field_box.getStore());
                     me._filterOutExceptNumbers(field_box.getStore());
-                    field_box.setValue( field_box.getStore().getAt(0) );
+                    var value = me.getSetting('metric_field');
+                    if ( value ) {
+                        field_box.setValue(value);
+                    }
+                    if ( !field_box.getValue() ) {
+                        field_box.setValue( field_box.getStore().getAt(0) );
+                    }
                 }
             },
             readyEvent: 'ready'
@@ -1220,7 +1244,16 @@ Ext.define('CustomApp', {
             labelWidth: 100,
             labelAlign: 'left',
             minWidth: 200,
-            margin: 10
+            margin: 10/*,
+            listeners: {
+                afterrender: function(date_box){
+                    var value = me.getSetting('start_date');
+                    console.log('afterrender',value);
+                    if ( value ) {
+                        field_box.setValue(value);
+                    }
+                }
+            }*/
         },
         {
             name: 'end_date',
@@ -1229,7 +1262,16 @@ Ext.define('CustomApp', {
             labelWidth: 100,
             labelAlign: 'left',
             minWidth: 200,
-            margin: 10
+            margin: 10/*,
+            listeners: {
+                boxready: function(date_box){
+                    var value = me.getSetting('end_date');
+                    console.log('boxready',value);
+                    if ( value ) {
+                        date_box.setValue(value);
+                    }
+                }
+            }*/
         },
         {
             xtype:'textareafield',
