@@ -20,7 +20,6 @@ This is a new chart.  You can choose the record type to make a date-driven area 
  * Perhaps an additional filter for the lookback itself (that is, apply the limits every day instead of (in addition to?) at the end and retconning)
  * Add query math for date keywords
  * Allow interaction with the page-based timebox dropdowns (iteration/release)
- * Move settings to the settings gear
  
 ## Development Notes
 
