@@ -3,11 +3,11 @@
 <head>
     <title>Super Customizable Cumulative Flow Diagram</title>
     <!--  (c) 2013,2014 Rally Software Development Corp.  All Rights Reserved. -->
-    <!--  Build Date: Tue Aug 26 2014 18:22:08 GMT-0700 (PDT) -->
+    <!--  Build Date: Tue Aug 26 2014 18:29:30 GMT-0700 (PDT) -->
     
     <script type="text/javascript">
-        var APP_BUILD_DATE = "Tue Aug 26 2014 18:22:08 GMT-0700 (PDT)";
-        var CHECKSUM = 40281281115;
+        var APP_BUILD_DATE = "Tue Aug 26 2014 18:29:30 GMT-0700 (PDT)";
+        var CHECKSUM = 40663516237;
     </script>
     
     <script type="text/javascript" src="/apps/2.0rc3/sdk.js"></script>
@@ -1038,6 +1038,12 @@ Ext.define('CustomApp', {
         
         var target = this.down('#display_box');
 
+        this.logger.log(target.getHeight(),Ext.getBody().getHeight());
+        var height = Ext.getBody().getHeight();
+        
+        if ( height > 20 ) {
+            height = height - 20;
+        }
         target.add({
             xtype:'rallychart',
             storeType: 'Rally.data.lookback.SnapshotStore',
@@ -1062,6 +1068,7 @@ Ext.define('CustomApp', {
             chartConfig: {
                  chart: {
                      zoomType: 'xy',
+                     height: height,
                      events: {
                         redraw: function () {
                             me.logger.log('howdy');

@@ -157,6 +157,12 @@ Ext.define('CustomApp', {
         
         var target = this.down('#display_box');
 
+        this.logger.log(target.getHeight(),Ext.getBody().getHeight());
+        var height = Ext.getBody().getHeight();
+        
+        if ( height > 20 ) {
+            height = height - 20;
+        }
         target.add({
             xtype:'rallychart',
             storeType: 'Rally.data.lookback.SnapshotStore',
@@ -181,6 +187,7 @@ Ext.define('CustomApp', {
             chartConfig: {
                  chart: {
                      zoomType: 'xy',
+                     height: height,
                      events: {
                         redraw: function () {
                             me.logger.log('howdy');
