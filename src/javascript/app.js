@@ -3,10 +3,10 @@ Ext.define('CustomApp', {
     componentCls: 'app',
     logger: new Rally.technicalservices.Logger(),
     settingsScope: 'app',
+    layout:'anchor',
     items: [
-        {xtype:'container',itemId:'settings_box'},
-        {xtype:'container',itemId:'display_box',margin:10},
-        {xtype:'tsinfolink'}
+        {xtype:'container',itemId:'display_box',anchor:'95% 80%'},
+        {xtype:'tsinfolink', anchor: '95% 15%', informationHtml: "This is an unsupported app created for educational purposes."}
     ],
     launch: function() {
         if (this.isExternal()){
@@ -138,6 +138,7 @@ Ext.define('CustomApp', {
     },
     _makeChart: function(allowed_values,allowed_oids) {
         this.down('#display_box').removeAll();
+        var me = this;
         
         var project = this.getContext().getProject().ObjectID;
         var type_path = this.getSetting('type_path');
@@ -154,7 +155,9 @@ Ext.define('CustomApp', {
         var chart_title = this._getChartTitle(type_path,group_by_field);
         this.logger.log("  Title: ", chart_title);
         
-        this.down('#display_box').add({
+        var target = this.down('#display_box');
+
+        target.add({
             xtype:'rallychart',
             storeType: 'Rally.data.lookback.SnapshotStore',
             calculatorType: 'Rally.TechnicalServices.CFDCalculator',
@@ -177,7 +180,13 @@ Ext.define('CustomApp', {
             },
             chartConfig: {
                  chart: {
-                     zoomType: 'xy'
+                     zoomType: 'xy',
+                     events: {
+                        redraw: function () {
+                            me.logger.log('howdy');
+                            me._preProcess();
+                        }
+                     }
                  },
                  title: {
                      text: chart_title
@@ -208,7 +217,6 @@ Ext.define('CustomApp', {
     isExternal: function(){
       return typeof(this.getAppId()) == 'undefined';
     },
-    
     
     
     /********************************************
@@ -417,8 +425,8 @@ Ext.define('CustomApp', {
         this._appSettings.on('save', this._onSettingsSaved, this);
         
         if (this.isExternal()){
-            if (this.down('#settings_box').getComponent(this._appSettings.id)==undefined){
-                this.down('#settings_box').add(this._appSettings);
+            if (this.down('#display_box').getComponent(this._appSettings.id)==undefined){
+                this.down('#display_box').add(this._appSettings);
             }
         } else {
             this.hide();
