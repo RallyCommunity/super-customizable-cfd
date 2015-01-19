@@ -29,7 +29,8 @@ Ext.define('CustomApp', {
         var title = main_title;
         var query_string = this.getSetting('query_string');
         if ( query_string ) {
-            title += "<br/>Filtered with " + query_string;
+            //  title += "<br/>Filtered with " + query_string;
+            title = "";
         }
         return title;
     },
