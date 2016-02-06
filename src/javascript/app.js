@@ -191,8 +191,8 @@ Ext.define('CustomApp', {
                      height: height,
                      events: {
                         redraw: function () {
-                            me.logger.log('howdy');
-                            me._preProcess();
+//                            me.logger.log('howdy');
+//                            me._preProcess();
                         }
                      }
                  },
