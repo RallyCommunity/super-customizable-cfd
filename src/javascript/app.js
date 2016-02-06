@@ -182,7 +182,8 @@ Ext.define('CustomApp', {
                     {property:'_ProjectHierarchy', value: project}
                 ],
                 hydrate: [group_by_field],
-                fetch: [group_by_field,value_field]
+                fetch: [group_by_field,value_field],
+                removeUnauthorizedSnapshots : true
             },
             chartConfig: {
                  chart: {

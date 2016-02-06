@@ -190,7 +190,7 @@ Ext.define("Rally.TechnicalServices.CFDCalculator", {
     },
     // override runCalculation to change false to "false" because highcharts doesn't like it
     runCalculation: function (snapshots) {
-        
+        console.log(snapshots);
         var calculatorConfig = this._prepareCalculatorConfig(),
             seriesConfig = this._buildSeriesConfig(calculatorConfig);
 

@@ -3,11 +3,11 @@
 <head>
     <title>Super Customizable Cumulative Flow Diagram</title>
     <!--  (c) 2013,2014 Rally Software Development Corp.  All Rights Reserved. -->
-    <!--  Build Date: Tue Aug 26 2014 18:29:30 GMT-0700 (PDT) -->
+    <!--  Build Date: Sat Feb 06 2016 09:34:58 GMT-0800 (PST) -->
     
     <script type="text/javascript">
-        var APP_BUILD_DATE = "Tue Aug 26 2014 18:29:30 GMT-0700 (PDT)";
-        var CHECKSUM = 40663516237;
+        var APP_BUILD_DATE = "Sat Feb 06 2016 09:34:58 GMT-0800 (PST)";
+        var CHECKSUM = 40826374148;
     </script>
     
     <script type="text/javascript" src="/apps/2.0rc3/sdk.js"></script>
@@ -207,7 +207,7 @@ Ext.define("Rally.TechnicalServices.CFDCalculator", {
     },
     // override runCalculation to change false to "false" because highcharts doesn't like it
     runCalculation: function (snapshots) {
-        
+        console.log(snapshots);
         var calculatorConfig = this._prepareCalculatorConfig(),
             seriesConfig = this._buildSeriesConfig(calculatorConfig);
 
@@ -1063,7 +1063,8 @@ Ext.define('CustomApp', {
                     {property:'_ProjectHierarchy', value: project}
                 ],
                 hydrate: [group_by_field],
-                fetch: [group_by_field,value_field]
+                fetch: [group_by_field,value_field],
+                removeUnauthorizedSnapshots : true
             },
             chartConfig: {
                  chart: {
