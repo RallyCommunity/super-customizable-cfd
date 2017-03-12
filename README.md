@@ -2,6 +2,8 @@
 
 This cannot be used in on-premises installations.
 
+![](screenshot.png)
+
 ## Description
 
 This is a new chart.  You can choose the record type to make a date-driven area diagram from.  Also choose:
@@ -10,17 +12,17 @@ This is a new chart.  You can choose the record type to make a date-driven area 
  * A field from the artifact type to group on (the different colors of the area chart)
  * A field from the artifact (or count) to calculate the Y axis
  * A beginning and end date -- Keep in mind that there is not historical data before 11/11/11.
- * An optional query -- this is in the normal Rally query language and will be used to limit the results that are calculated 
+ * An optional query -- this is in the normal Rally query language and will be used to limit the results that are calculated
     the item must match the filter at this point in time in order to be used for tracking the history (doesn't matter if it
     moved from Release 1 to Release 2 in the period, if you limit to Release 2, we'll see it all the time because it's there now)
  * The optional query now supports the date keywords (but NOT the math) listed [here](https://help.rallydev.com/use-grid-app-queries#dates)
  * Configuration settings are saved
- 
+
 ### TODO
  * Perhaps an additional filter for the lookback itself (that is, apply the limits every day instead of (in addition to?) at the end and retconning)
  * Add query math for date keywords
  * Allow interaction with the page-based timebox dropdowns (iteration/release)
- 
+
 ## Development Notes
 
 10 August 2014 - This is a complete rewrite.  The most significant changes are:
@@ -31,7 +33,7 @@ This is a new chart.  You can choose the record type to make a date-driven area 
 
 ### First Load
 
-If you've just downloaded this from github and you want to do development, 
+If you've just downloaded this from github and you want to do development,
 you're going to need to have these installed:
 
  * git
@@ -46,15 +48,15 @@ to get set up to develop:
 
 ### Structure
 
-  * src/javascript:  All the JS files saved here will be compiled into the 
+  * src/javascript:  All the JS files saved here will be compiled into the
   target html file
-  * src/style: All of the stylesheets saved here will be compiled into the 
+  * src/style: All of the stylesheets saved here will be compiled into the
   target html file
-  * test/fast: Fast jasmine tests go here.  There should also be a helper 
+  * test/fast: Fast jasmine tests go here.  There should also be a helper
   file that is loaded first for creating mocks and doing other shortcuts
   (fastHelper.js) **Tests should be in a file named <something>-spec.js**
   * test/slow: Slow jasmine tests go here.  There should also be a helper
-  file that is loaded first for creating mocks and doing other shortcuts 
+  file that is loaded first for creating mocks and doing other shortcuts
   (slowHelper.js) **Tests should be in a file named <something>-spec.js**
   * templates: This is where templates that are used to create the production
   and debug html files live.  The advantage of using these templates is that
@@ -69,10 +71,10 @@ to get set up to develop:
         "username":"you@company.com",
         "password":"secret"
     }
-  
+
 ### Usage of the grunt file
 ####Tasks
-    
+
 ##### grunt debug
 
 Use grunt debug to create the debug html file.  You only need to run this when you have added new files to
@@ -84,7 +86,7 @@ Use grunt build to create the production html file.  We still have to copy the h
 
 ##### grunt test-fast
 
-Use grunt test-fast to run the Jasmine tests in the fast directory.  Typically, the tests in the fast 
+Use grunt test-fast to run the Jasmine tests in the fast directory.  Typically, the tests in the fast
 directory are more pure unit tests and do not need to connect to Rally.
 
 ##### grunt test-slow
