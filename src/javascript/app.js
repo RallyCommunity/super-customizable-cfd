@@ -3,24 +3,117 @@ Ext.define('CustomApp', {
     componentCls: 'app',
     logger: new Rally.technicalservices.Logger(),
     settingsScope: 'app',
-    layout:'anchor',
+    layout: 'fit',
     items: [
-        {xtype:'container',itemId:'display_box',anchor:'95% 80%'},
-        {xtype:'tsinfolink', anchor: '95% 15%', informationHtml: "This is an unsupported app created for educational purposes."}
+        {
+          xtype:'container',
+          itemId:'display_box',
+          layout: {
+            type: 'vbox',
+            align: 'stretch'
+          },
+          items: [
+              { xtype: 'rallyleftright', itemId: 'header', height: 30 },
+              { xtype: 'container', itemId: 'filterContainer'},
+              { xtype: 'container', itemId: 'chartContainer', layout: 'fit', flex: 1 },
+            ]
+        }
     ],
     launch: function() {
-        if (this.isExternal()){
-            this.showSettings(this.config);
+        if ( ! this.getSetting('type_path') ) {
+            this.down('#chartContainer').add({
+                xtype:'container',
+                html:'No settings applied.  Select "Edit App Settings." from the gear menu.'
+            });
         } else {
-            if ( ! this.getSetting('type_path') ) {
-                this.down('#display_box').add({
-                    xtype:'container',
-                    html:'No settings applied.  Select "Edit App Settings." from the gear menu.'
-                });
-            }
-            this.onSettingsUpdate(this.getSettings());  //(this.config.type,this.config.pageSize,this.config.fetch,this.config.columns);
+            this._refresh();
         }  
     },
+    onTimeboxScopeChange: function () {
+        this.callParent(arguments);
+
+        this._getOIDsAndMakeChart(this.allowedValues);
+    },
+    _addHeaderControls: function() {
+        var blackListFields = [],
+            whiteListFields = ['Milestones', 'Tags'],
+            modelNames = [this.model.typePath];
+        this.down('#header').getLeft().add({
+            xtype: 'rallyinlinefiltercontrol',
+            context: this.getContext(),
+            height: 26,
+            align: 'left',
+            inlineFilterButtonConfig: {
+                stateful: true,
+                stateId: this.getContext().getScopedStateId('inline-filter'),
+                context: this.getContext(),
+                modelNames: modelNames,
+                filterChildren: false,
+                inlineFilterPanelConfig: {
+                    quickFilterPanelConfig: {
+                        defaultFields: ['ArtifactSearch', 'Owner'],
+                        addQuickFilterConfig: {
+                            blackListFields: blackListFields,
+                            whiteListFields: whiteListFields
+                        }
+                    },
+                    advancedFilterPanelConfig: {
+                        advancedFilterRowsConfig: {
+                            propertyFieldConfig: {
+                                blackListFields: blackListFields,
+                                whiteListFields: whiteListFields
+                            }
+                        }
+                    }
+                },
+                listeners: {
+                    inlinefilterchange: this._onFilterChange,
+                    inlinefilterready: function (inlineFilterPanel) {
+                      this.down('#filterContainer').add(inlineFilterPanel);
+                    },
+                    scope: this
+                }
+            }
+        });
+        this.down('#header').getRight().add({
+            xtype: 'rallybutton',
+            cls: 'secondary rly-small',
+            margin: '3px 20px 0 0',
+            frame: false,
+            iconCls: 'icon-export',
+            toolTipConfig: {
+                html: 'Export',
+                anchor: 'top',
+                hideDelay: 0
+            },
+            listeners: {
+                click: this._onExportClick,
+                scope: this
+            }
+        });
+    },
+
+    _onFilterChange: function (inlineFilterButton) {
+        this.filterInfo = inlineFilterButton.getTypesAndFilters();
+        this._getOIDsAndMakeChart(this.allowedValues);
+    },
+
+    _onExportClick: function () {
+      var link = document.createElement('a');
+      var chartData = this.down('rallychart').chartData;
+      var data = _.reduce(chartData.categories, function(accum, category, i) {
+          var row = [category];
+          _.each(chartData.series, function(series) {
+              row.push(series.data[i]);
+          });
+          accum.push(row.join(','));
+          return accum;
+      }, [['Date'].concat(_.pluck(chartData.series, 'name')).join(',')]);
+      link.setAttribute('href', 'data:text/csv;charset=utf-8,' + encodeURI(data.join('\n')));
+      link.setAttribute('download', 'cfd.csv');
+      link.click();
+  },
+
     _getChartTitle: function(type_path,group_by_field){
         var type = this._deCamelCase(type_path);
         var field = this._deCamelCase(group_by_field);
@@ -47,9 +140,12 @@ Ext.define('CustomApp', {
     _preProcess: function() {
         this._getAllowedValues().then({
             scope: this,
-            success:this._getOIDsAndMakeChart,
+            success: function(allowedValues) {
+              this.allowedValues = allowedValues;
+              this._addHeaderControls();
+            },
             failure:function(message){
-                this.down('#display_box').add({xtype:'container',html:'message'});
+                this.down('#chartContainer').add({xtype:'container',html:'message'});
             }
         });
     },
@@ -63,6 +159,7 @@ Ext.define('CustomApp', {
         Rally.data.ModelFactory.getModel({
             type: type_path,
             success: function(model){
+                this.model = model;
                 var field = model.getField(group_by_field);
                 var attribute_definition = field.attributeDefinition;
                 if ( attribute_definition && attribute_definition.AttributeType == "BOOLEAN" ) {
@@ -82,19 +179,18 @@ Ext.define('CustomApp', {
         });
         return deferred.promise;
     },
-    _findOIDsByQuery: function(model,query_string) {
+    _findOIDsByQuery: function(model, filters) {
         this.logger.log("_findOIDsByQuery");
-        this.setLoading("Loading Filtered Data");
+        this.down('#chartContainer').setLoading("Loading Filtered Data");
 
         var deferred = Ext.create('Deft.Deferred');
-        
-        var filter = Ext.create('TSStringFilter',{query_string:query_string});
         
         Ext.create('Rally.data.WsapiDataStore',{
             model: model,
             autoLoad: true,
-            limit: 'Infinity',
-            filters: filter,
+            limit: Infinity,
+            pageSize: 2000,
+            filters: filters,
             fetch: ['ObjectID'],
             listeners: {
                 scope: this,
@@ -106,10 +202,10 @@ Ext.define('CustomApp', {
                             oids.push(item.get('ObjectID'));
                         });
                         this.logger.log("back from wsapi with",oids);
-                        this.setLoading(false);
+                        this.down('#chartContainer').setLoading(false);
                         deferred.resolve(oids);
                     } else {
-                        this.setLoading(false);
+                        this.down('#chartContainer').setLoading(false);
                         deferred.reject("Error loading filter");
                     }
                 }
@@ -118,27 +214,34 @@ Ext.define('CustomApp', {
         return deferred.promise;
     },
     _getOIDsAndMakeChart: function(allowed_values) {
+        this.down('#chartContainer').removeAll();
+        
         var type_path = this.getSetting('type_path');
         var query_string = this.getSetting('query_string');
-        
-        if ( query_string ) { 
-            this.logger.log("Using query:", query_string);
-            
-            this._findOIDsByQuery(type_path, query_string).then({
-                scope: this,
-                success: function(oids){
-                    this._makeChart(allowed_values,oids);
-                },
-                failure: function(error) {
-                    alert("Error while trying to apply filter");
-                }
-            });
-        } else {
-            this._makeChart(allowed_values,null);
+        var timeboxScope = this.getContext().getTimeboxScope();
+        var filters = [].concat(this.filterInfo.filters);
+        if (timeboxScope && timeboxScope.isApplicable(this.model)) {
+          filters.push(timeboxScope.getQueryFilter());
         }
+        if (query_string) {
+          filters.push(Ext.create('TSStringFilter',{query_string:query_string}));
+        }
+        
+        if (filters.length) {
+            this.logger.log("Using query:", Rally.data.wsapi.Filter.and(filters).toString());
+        }
+
+        this._findOIDsByQuery(type_path, filters).then({
+            scope: this,
+            success: function(oids){
+                this._makeChart(allowed_values,oids);
+            },
+            failure: function(error) {
+                alert("Error while trying to apply filter");
+            }
+        });
     },
     _makeChart: function(allowed_values,allowed_oids) {
-        this.down('#display_box').removeAll();
         var me = this;
         
         var project = this.getContext().getProject().ObjectID;
@@ -156,16 +259,20 @@ Ext.define('CustomApp', {
         var chart_title = this._getChartTitle(type_path,group_by_field);
         this.logger.log("  Title: ", chart_title);
         
-        var target = this.down('#display_box');
-
-        this.logger.log(target.getHeight(),Ext.getBody().getHeight());
-        var height = Ext.getBody().getHeight();
-        
-        if ( height > 20 ) {
-            height = height - 20;
-        }
-        target.add({
+        this.down('#chartContainer').add({
             xtype:'rallychart',
+            chartColors: [
+                "#FF8200", // $orange
+                "#F6A900", // $gold
+                "#FAD200", // $yellow
+                "#8DC63F", // $lime
+                "#1E7C00", // $green_dk
+                "#337EC6", // $blue_link
+                "#005EB8", // $blue
+                "#7832A5", // $purple,
+                "#DA1884",  // $pink,
+                "#C0C0C0" // $grey4
+            ],
             storeType: 'Rally.data.lookback.SnapshotStore',
             calculatorType: 'Rally.TechnicalServices.CFDCalculator',
             calculatorConfig: {
@@ -178,18 +285,20 @@ Ext.define('CustomApp', {
                 group_by_field: group_by_field
             },
             storeConfig: {
-                filters: [
-                    {property:'_TypeHierarchy',value: type_path},
-                    {property:'_ProjectHierarchy', value: project}
-                ],
+                find: {
+                    _TypeHierarchy: type_path,
+                    ObjectID: { $in: allowed_oids },
+                    Children: null //only applies to stories
+                },
                 hydrate: [group_by_field],
                 fetch: [group_by_field,value_field],
-                removeUnauthorizedSnapshots : true
+                removeUnauthorizedSnapshots : true,
+                useHttpPost: true,
+                compress: true
             },
             chartConfig: {
                  chart: {
                      zoomType: 'xy',
-                     height: height,
                      events: {
                         redraw: function () {
 //                            me.logger.log('howdy');
@@ -419,43 +528,21 @@ Ext.define('CustomApp', {
             fieldLabel:'Limit to items that currently meet this query:'
         }];
     },
-    //showSettings:  Override to add showing when external + scrolling
-    showSettings: function(options) {
-        this.logger.log("showSettings",options);
-        this._appSettings = Ext.create('Rally.app.AppSettings', Ext.apply({
-            fields: this.getSettingsFields(),
-            settings: this.getSettings(),
-            defaultSettings: this.getDefaultSettings(),
-            context: this.getContext(),
-            settingsScope: this.settingsScope
-        }, options));
 
-        this._appSettings.on('cancel', this._hideSettings, this);
-        this._appSettings.on('save', this._onSettingsSaved, this);
-        
-        if (this.isExternal()){
-            if (this.down('#display_box').getComponent(this._appSettings.id)==undefined){
-                this.down('#display_box').add(this._appSettings);
-            }
-        } else {
-            this.hide();
-            this.up().add(this._appSettings);
-        }
-        return this._appSettings;
-    },
-    _onSettingsSaved: function(settings){
-        this.logger.log('_onSettingsSaved',settings);
-        Ext.apply(this.settings, settings);
-        this._hideSettings();
-        this.onSettingsUpdate(settings);
-    },
     //onSettingsUpdate:  Override
-    onSettingsUpdate: function (settings){
-        //Build and save column settings...this means that we need to get the display names and multi-list
-        this.logger.log('onSettingsUpdate',settings);
-        
-        var type = this.getSetting('type');
-        this._preProcess();
-    }
+    onSettingsUpdate: function (settings) {
+        if (this.isExternal()) {
+            //Build and save column settings...this means that we need to get the display names and multi-list
+            this.logger.log('onSettingsUpdate',settings);
+            this._refresh();     
+        }
+    },
 
+    _refresh: function() {
+      this.down('#chartContainer').removeAll();
+      this.down('#header').getLeft().removeAll();
+      this.down('#header').getRight().removeAll();
+      this.down('#filterContainer').removeAll();
+      this._preProcess();
+    }
 });

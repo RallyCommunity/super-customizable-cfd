@@ -122,8 +122,7 @@ Ext.define("Rally.TechnicalServices.CFDCalculator", {
             metrics = calculatorConfig.metrics,
             derivedFieldsAfterSummary = calculatorConfig.deriveFieldsAfterSummary;
 
-        for (var i = 0, ilength = metrics.length; i < ilength; i += 1) {
-            var metric = metrics[i];
+        _.each(metrics, function(metric, i) {
             if ( metric.f == "groupBySum" || metric.f == "groupByCount") {
                 var type = metric.f.replace(/groupBy/,"");
                 
@@ -146,7 +145,7 @@ Ext.define("Rally.TechnicalServices.CFDCalculator", {
                     dashStyle: metric.dashStyle || "Solid"
                 });
             }
-        }
+        });
 
         for (var j = 0, jlength = derivedFieldsAfterSummary.length; j < jlength; j += 1) {
             var derivedField = derivedFieldsAfterSummary[j];

@@ -110,7 +110,7 @@ Ext.define('Rally.technicalservices.SettingsDialog',{
                     text: 'Cancel',
                     handler: function() {
                         this.fireEvent('cancelChosen');
-                        this.close()
+                        this.close();
                     },
                     scope: this
                 }

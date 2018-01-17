@@ -1,6 +1,20 @@
 {
     "name": "Super Customizable Cumulative Flow Diagram",
     "className": "CustomApp",
-    "server": "https://us1.rallydev.com",
-    "sdk": "2.0"
+    "server": "https://rally1.rallydev.com",
+    "sdk": "2.1",
+    "javascript": [
+      "src/javascript/_ts_override-fields.js",
+      "src/javascript/_ts_override-queryparser.js",
+      "src/javascript/_ts_util.js",
+      "src/javascript/_ts-cfd-calculator.js",
+      "src/javascript/_ts-info-link.js",
+      "src/javascript/_ts-logger.js",
+      "src/javascript/_ts-settings-dialog.js",
+      "src/javascript/_ts-string-filter.js",
+      "src/javascript/app.js"
+    ],
+    "css": [
+      "src/style/app.css"
+    ]
 }
