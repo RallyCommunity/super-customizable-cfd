@@ -1,4 +1,4 @@
-#Super Customizable Cumulative Flow Diagram
+# Super Customizable Cumulative Flow Diagram
 
 This cannot be used in on-premises installations.
 
@@ -78,7 +78,7 @@ to get set up to develop:
     }
 
 ### Usage of the grunt file
-####Tasks
+#### Tasks
 
 ##### grunt debug
 
