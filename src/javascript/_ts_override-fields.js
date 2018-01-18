@@ -26,8 +26,7 @@ Ext.override(Rally.ui.DateField,{
             value = Rally.util.DateTime.toIsoString(value).replace(/T.*$/,"");
         }
         return value;
-    }
-    ,
+    },
     rawToValue: function(rawValue) {
         //console.log('raw value',rawValue);
         var value = rawValue;
