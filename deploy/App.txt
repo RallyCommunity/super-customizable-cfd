@@ -3,11 +3,11 @@
 <head>
     <title>Super Customizable Cumulative Flow Diagram</title>
     <!--  (c) 2013,2014 Rally Software Development Corp.  All Rights Reserved. -->
-    <!--  Build Date: Wed Jan 17 2018 20:26:13 GMT-0700 (MST) -->
+    <!--  Build Date: Mon Jan 22 2018 10:37:51 GMT-0700 (MST) -->
     
     <script type="text/javascript">
-        var APP_BUILD_DATE = "Wed Jan 17 2018 20:26:13 GMT-0700 (MST)";
-        var CHECKSUM = 45034351362;
+        var APP_BUILD_DATE = "Mon Jan 22 2018 10:37:51 GMT-0700 (MST)";
+        var CHECKSUM = 45094541693;
     </script>
     
     <script type="text/javascript" src="/apps/2.1/sdk.js"></script>
@@ -1108,8 +1108,10 @@ Ext.define('CustomApp', {
           filters.push(Ext.create('TSStringFilter',{query_string:query_string}));
         }
         
-        this.logger.log("Using query:", Rally.data.wsapi.Filter.and(filters).toString());
-            
+        if (filters.length) {
+            this.logger.log("Using query:", Rally.data.wsapi.Filter.and(filters).toString());
+        }
+
         this._findOIDsByQuery(type_path, filters).then({
             scope: this,
             success: function(oids){
