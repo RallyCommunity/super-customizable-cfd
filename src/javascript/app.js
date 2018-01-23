@@ -75,14 +75,17 @@ Ext.define('CustomApp', {
                 }
             }
         });
+
+        var isIE = this._isIE();
         this.down('#header').getRight().add({
             xtype: 'rallybutton',
+            disabled: isIE,
             cls: 'secondary rly-small',
             margin: '3px 20px 0 0',
             frame: false,
             iconCls: 'icon-export',
             toolTipConfig: {
-                html: 'Export',
+                html: isIE ? 'Export is currently not supported in Microsoft browsers.' : 'Export',
                 anchor: 'top',
                 hideDelay: 0
             },
@@ -93,25 +96,34 @@ Ext.define('CustomApp', {
         });
     },
 
+    _isIE: function() {
+        var ua = window.navigator.userAgent;
+        return ua.indexOf('MSIE ') > 0 ||
+            ua.indexOf('Trident/') > 0 ||
+            ua.indexOf('Edge/') > 0;
+    },
+
     _onFilterChange: function (inlineFilterButton) {
         this.filterInfo = inlineFilterButton.getTypesAndFilters();
         this._getOIDsAndMakeChart(this.allowedValues);
     },
 
     _onExportClick: function () {
-      var link = document.createElement('a');
-      var chartData = this.down('rallychart').chartData;
-      var data = _.reduce(chartData.categories, function(accum, category, i) {
-          var row = [category];
-          _.each(chartData.series, function(series) {
-              row.push(series.data[i]);
-          });
-          accum.push(row.join(','));
-          return accum;
-      }, [['Date'].concat(_.pluck(chartData.series, 'name')).join(',')]);
-      link.setAttribute('href', 'data:text/csv;charset=utf-8,' + encodeURI(data.join('\n')));
-      link.setAttribute('download', 'cfd.csv');
-      link.click();
+      if (!this._isIE()) {
+          var link = document.createElement('a');
+          var chartData = this.down('rallychart').chartData;
+          var data = _.reduce(chartData.categories, function(accum, category, i) {
+              var row = [category];
+              _.each(chartData.series, function(series) {
+                  row.push(series.data[i]);
+              });
+              accum.push(row.join(','));
+              return accum;
+          }, [['Date'].concat(_.pluck(chartData.series, 'name')).join(',')]);
+          link.setAttribute('href', 'data:text/csv;charset=utf-8,' + encodeURI(data.join('\n')));
+          link.setAttribute('download', 'cfd.csv');
+          link.click();
+      }
   },
 
     _getChartTitle: function(type_path,group_by_field){
@@ -489,16 +501,7 @@ Ext.define('CustomApp', {
             labelWidth: 100,
             labelAlign: 'left',
             minWidth: 200,
-            margin: 10/*,
-            listeners: {
-                afterrender: function(date_box){
-                    var value = me.getSetting('start_date');
-                    console.log('afterrender',value);
-                    if ( value ) {
-                        field_box.setValue(value);
-                    }
-                }
-            }*/
+            margin: 10
         },
         {
             name: 'end_date',
@@ -507,16 +510,7 @@ Ext.define('CustomApp', {
             labelWidth: 100,
             labelAlign: 'left',
             minWidth: 200,
-            margin: 10/*,
-            listeners: {
-                boxready: function(date_box){
-                    var value = me.getSetting('end_date');
-                    console.log('boxready',value);
-                    if ( value ) {
-                        date_box.setValue(value);
-                    }
-                }
-            }*/
+            margin: 10
         },
         {
             xtype:'textareafield',
