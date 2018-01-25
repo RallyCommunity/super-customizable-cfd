@@ -3,11 +3,11 @@
 <head>
     <title>Super Customizable Cumulative Flow Diagram</title>
     <!--  (c) 2013,2014 Rally Software Development Corp.  All Rights Reserved. -->
-    <!--  Build Date: Thu Jan 25 2018 14:50:10 GMT-0700 (MST) -->
+    <!--  Build Date: Thu Jan 25 2018 14:52:34 GMT-0700 (MST) -->
     
     <script type="text/javascript">
-        var APP_BUILD_DATE = "Thu Jan 25 2018 14:50:10 GMT-0700 (MST)";
-        var CHECKSUM = 32621128248;
+        var APP_BUILD_DATE = "Thu Jan 25 2018 14:52:34 GMT-0700 (MST)";
+        var CHECKSUM = 32647669000;
     </script>
     
     <script type="text/javascript" src="/apps/2.1/sdk.js"></script>
@@ -659,7 +659,7 @@ Ext.define('CustomApp', {
         this._refresh();
     },
     _addHeaderControls: function() {
-        var blackListFields = [],
+        var blackListFields = ['FlowState'],
             whiteListFields = ['Milestones', 'Tags'],
             modelNames = [this.model.typePath];
         this.down('#header').getLeft().add({

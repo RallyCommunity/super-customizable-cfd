@@ -38,7 +38,7 @@ Ext.define('CustomApp', {
         this._refresh();
     },
     _addHeaderControls: function() {
-        var blackListFields = [],
+        var blackListFields = ['FlowState'],
             whiteListFields = ['Milestones', 'Tags'],
             modelNames = [this.model.typePath];
         this.down('#header').getLeft().add({

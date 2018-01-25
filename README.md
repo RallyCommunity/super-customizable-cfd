@@ -29,6 +29,7 @@ Jan 2018
  * Add export
  * Add advanced filtering
  * Add support for timebox scoped pages
+ * Add support for end date of today
  
 10 August 2014 - This is a complete rewrite.  The most significant changes are:
  * Settings are now accessed from the gear menu

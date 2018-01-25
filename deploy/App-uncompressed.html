@@ -651,7 +651,7 @@ Ext.define('Rally.technicalservices.Logger',{
         this._refresh();
     },
     _addHeaderControls: function() {
-        var blackListFields = [],
+        var blackListFields = ['FlowState'],
             whiteListFields = ['Milestones', 'Tags'],
             modelNames = [this.model.typePath];
         this.down('#header').getLeft().add({
