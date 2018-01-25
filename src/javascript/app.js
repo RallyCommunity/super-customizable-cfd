@@ -21,18 +21,21 @@ Ext.define('CustomApp', {
     ],
     launch: function() {
         if ( ! this.getSetting('type_path') ) {
-            this.down('#chartContainer').add({
-                xtype:'container',
-                html:'No settings applied.  Select "Edit App Settings." from the gear menu.'
-            });
+            this._showMissingSettingMessage('No settings applied.  Select "Edit App Settings." from the gear menu.');
         } else {
             this._refresh();
         }  
     },
+    _showMissingSettingMessage: function(message) {
+        this.down('#chartContainer').add({
+            xtype: 'container',
+            html: message
+        });
+    },
     onTimeboxScopeChange: function () {
         this.callParent(arguments);
 
-        this._getOIDsAndMakeChart(this.allowedValues);
+        this._refresh();
     },
     _addHeaderControls: function() {
         var blackListFields = [],
@@ -109,22 +112,22 @@ Ext.define('CustomApp', {
     },
 
     _onExportClick: function () {
-      if (!this._isIE()) {
-          var link = document.createElement('a');
-          var chartData = this.down('rallychart').chartData;
-          var data = _.reduce(chartData.categories, function(accum, category, i) {
-              var row = [category];
-              _.each(chartData.series, function(series) {
-                  row.push(series.data[i]);
-              });
-              accum.push(row.join(','));
-              return accum;
-          }, [['Date'].concat(_.pluck(chartData.series, 'name')).join(',')]);
-          link.setAttribute('href', 'data:text/csv;charset=utf-8,' + encodeURI(data.join('\n')));
-          link.setAttribute('download', 'cfd.csv');
-          link.click();
-      }
-  },
+        if (!this._isIE()) {
+            var link = document.createElement('a');
+            var chartData = this.down('rallychart').chartData;
+            var data = _.reduce(chartData.categories, function(accum, category, i) {
+                var row = [category];
+                _.each(chartData.series, function(series) {
+                    row.push(series.data[i]);
+                });
+                accum.push(row.join(','));
+                return accum;
+            }, [['Date'].concat(_.pluck(chartData.series, 'name')).join(',')]);
+            link.setAttribute('href', 'data:text/csv;charset=utf-8,' + encodeURI(data.join('\n')));
+            link.setAttribute('download', 'cfd.csv');
+            link.click();
+        }
+    },
 
     _getChartTitle: function(type_path,group_by_field){
         var type = this._deCamelCase(type_path);
@@ -139,6 +142,7 @@ Ext.define('CustomApp', {
         }
         return title;
     },
+
     _deCamelCase: function(camelCaseText){
         this.logger.log("_deCamelCase",camelCaseText);
         
@@ -149,17 +153,49 @@ Ext.define('CustomApp', {
         this.logger.log(" .. ", removed_custom_field_prefix);
         return removed_custom_field_prefix;
     },
+
+    _getStartDate: function() {
+        var startDate = this.getSetting('start_date');
+        if (startDate === 'timebox') {
+            var timeboxScope = this.getContext().getTimeboxScope();
+            return timeboxScope && timeboxScope.getRecord() && timeboxScope.getStartDate();
+        } else {
+            return startDate;
+        }
+    },
+
+    _getEndDate: function() {
+        var endDate = this.getSetting('end_date');
+        if (endDate === 'timebox') {
+            var timeboxScope = this.getContext().getTimeboxScope();
+            return timeboxScope && timeboxScope.getRecord() && timeboxScope.getEndDate();
+        } else if (endDate === 'today') {
+            return Rally.util.DateTime.toIsoString(new Date()); 
+        } else {
+            return endDate;
+        }
+    },
+
     _preProcess: function() {
-        this._getAllowedValues().then({
-            scope: this,
-            success: function(allowedValues) {
-              this.allowedValues = allowedValues;
-              this._addHeaderControls();
-            },
-            failure:function(message){
-                this.down('#chartContainer').add({xtype:'container',html:'message'});
-            }
-        });
+        var startDate = this._getStartDate();
+        var endDate = this._getEndDate();
+
+        if (!startDate) {
+            this._showMissingSettingMessage('No start date available.  Select "Edit App Settings." from the gear menu.');
+        } else if (!endDate) {
+          this._showMissingSettingMessage('No end date available.  Select "Edit App Settings." from the gear menu.');
+        } else {
+            this._getAllowedValues().then({
+                scope: this,
+                success: function(allowedValues) {
+                  this.allowedValues = allowedValues;
+                  this._addHeaderControls();
+                },
+                failure:function(message){
+                    this.down('#chartContainer').add({xtype:'container',html:'message'});
+                }
+            });
+        }
     },
     _getAllowedValues:function(){
         var deferred = Ext.create('Deft.Deferred');
@@ -259,8 +295,8 @@ Ext.define('CustomApp', {
         var project = this.getContext().getProject().ObjectID;
         var type_path = this.getSetting('type_path');
         var group_by_field = this.getSetting('group_by_field');
-        var start_date = this.getSetting('start_date');
-        var end_date = this.getSetting('end_date');
+        var start_date = this._getStartDate();
+        var end_date = this._getEndDate();
         
         var value_field = this.getSetting('metric_field');
         
@@ -496,20 +532,18 @@ Ext.define('CustomApp', {
         },
         {
             name: 'start_date',
-            xtype: 'rallydatefield',
+            xtype: 'startdatefield',
             fieldLabel: 'Start Date',
             labelWidth: 100,
             labelAlign: 'left',
-            minWidth: 200,
             margin: 10
         },
         {
             name: 'end_date',
-            xtype: 'rallydatefield',
+            xtype: 'enddatefield',
             fieldLabel: 'End Date',
             labelWidth: 100,
             labelAlign: 'left',
-            minWidth: 200,
             margin: 10
         },
         {
