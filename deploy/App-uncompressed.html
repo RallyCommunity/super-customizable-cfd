@@ -7,51 +7,6 @@
 
     <script type="text/javascript">
         Rally.onReady(function () {
-                //Ext.override(Rally.app.AppSettings,{
-//    _saveAppGlobalScopedSettings: function() {
-//        var globalAppSettings = this.getAppScopedSettingsForm().getValues(false,false,false,true);
-//        Ext.apply(this.settings, globalAppSettings);
-//
-//        return Rally.data.PreferenceManager.update({
-//            appID: this.getContext() && this.getContext().get('appID'),
-//            settings: globalAppSettings,
-//            project: null,
-//            workspace: null,
-//            scope: this
-//        });
-//    }
-//});
-
-
-Ext.override(Rally.ui.DateField,{
-    getSubmitValue: function() {
-        //console.log('getting submit value', this.getValue());
-        return Rally.util.DateTime.toIsoString(this.getValue());
-    },
-    valueToRaw: function(value) {
-        //console.log('valueToRaw',value);
-
-        if ( Ext.isDate(value) ) {
-            value = Rally.util.DateTime.toIsoString(value).replace(/T.*$/,"");
-        }
-        return value;
-    },
-    rawToValue: function(rawValue) {
-        //console.log('raw value',rawValue);
-        var value = rawValue;
-        
-        if ( rawValue && typeof rawValue == 'string' ) {
-            // test that it has dashes
-            if ( /-/.test(rawValue) ) {
-                value = Rally.util.DateTime.fromIsoString(rawValue);
-            }
-        }
-
-        return value;
-    }
-});
-
-
                 Ext.override(Rally.data.util.QueryStringParser,{
   applyOperators: function (operators, operator) {
         if (!operators.length) {
@@ -422,108 +377,6 @@ Ext.override(Rally.ui.DateField,{
         
         
 });
-                /**
- * A link that pops up a version dialog box
- */
-
-Ext.define('Rally.technicalservices.InfoLink',{
-    extend: 'Ext.Component',
-    alias: 'widget.tsinfolink',
-    
-    /**
-     * @cfg {String} informationHtml
-     * Additional text to be displayed on the popup dialog (for exmaple,
-     * to add a description of the app's use or functionality)
-     */
-    informationHtml: null,
-    
-    /**
-     * 
-     * cfg {String} title
-     * The title for the dialog box
-     */
-     title: "Build Information",
-    
-    renderTpl: "<div id='{id}-infolinkWrap' class='tsinfolink'>i</div>",
-
-    initComponent: function() {
-        this.callParent(arguments);
-       
-    },
-    
-    onRender: function() {
-        this.callParent(arguments);
-        this.mon(this.el,'click',this.onClick,this);
-    },
-    _generateChecksum: function(string){
-        var chk = 0x12345678,
-            i;
-        string = string.replace(/var CHECKSUM = .*;/,"");
-        string = string.replace(/\s/g,"");  //Remove all whitespace from the string.
-        
-        for (i = 0; i < string.length; i++) {
-            chk += (string.charCodeAt(i) * i);
-        }
-    
-        return chk;
-    },
-    _checkChecksum: function(container) {
-        var me = this;
-        Ext.Ajax.request({
-            url: document.URL,
-            params: {
-                id: 1
-            },
-            success: function (response) {
-                text = response.responseText;
-                if ( CHECKSUM ) {
-                    if ( CHECKSUM !== me._generateChecksum(text) ) {
-                        console.log("Checksums don't match!");
-                        if ( me.dialog ) {
-                            me.dialog.add({xtype:'container',html:'Checksums do not match'});
-                        }
-                    }
-                }
-            }
-        });
-    },
-    onClick: function(e) {
-        var me = this;
-        this._checkChecksum(this);
-        
-        var dialog_items = [];
-        
-        if ( this.informationHtml ) {
-            dialog_items.push({
-                xtype:'container',
-                html: this.informationHtml
-            });
-        }
-                
-        dialog_items.push({
-            xtype:'container',
-            html:"This app was created by the Rally Technical Services Team."
-        });
-        
-        if ( APP_BUILD_DATE ) {
-            dialog_items.push({
-                xtype:'container',
-                html:'Build date/time: ' + APP_BUILD_DATE
-            });
-        }
-        
-        if (this.dialog){this.dialog.destroy();}
-        this.dialog = Ext.create('Rally.ui.dialog.Dialog',{
-            defaults: { padding: 5, margin: 5 },
-            closable: true,
-            draggable: true,
-            title: me.title,
-            items: dialog_items
-        });
-        this.dialog.show();
-    }
-});
-
                 /*
  */
 Ext.define('Rally.technicalservices.Logger',{
@@ -547,302 +400,6 @@ Ext.define('Rally.technicalservices.Logger',{
 
 });
 
-                Ext.define('Rally.technicalservices.SettingsDialog',{
-    extend: 'Rally.ui.dialog.Dialog',
-    alias: 'widget.tssettingsdialog',
-    config: {
-        /* default settings. pass new ones in */
-        title: 'Settings',
-        model_type: 'HierarchicalRequirement',
-        /**
-         * artifact_types
-         * [ @type ] artifact_types This is the list of items allowed in the model chooser drop down
-         */
-        artifact_types: [
-            {Name:'HierarchicalRequirement',Value:'HierarchicalRequirement'},
-            {Name:'Defect',Value:'Defect'}
-        ],
-        group_by_field_name: 'Schedulestate',
-        metric: 'Count',
-        start_date:Rally.util.DateTime.add(new Date(),"month",-1),
-        end_date: Rally.util.DateTime.add(new Date(),"day",-1),
-        /**
-         * A string to apply to choose records that are allowed in the calculations --
-         * this query is applied to items as they exist now, and then all the calculations are
-         * about only those records as they were during the time period.  
-         * 
-         * This can make everything slow, because it adds a WsapiCall on top of the LookBack calls
-         */
-         query_string: null
-    },
-    items: {
-        xtype: 'panel',
-        border: false,
-        defaults: {
-            padding: 5,
-            margin: 5
-        },
-        items: [
-            {
-                xtype: 'container',
-                itemId: 'model_selector_box'
-            },
-            {
-                xtype:'container',
-                itemId: 'group_field_selector_box'
-            },
-            {
-                xtype:'container',
-                itemId: 'metric_selector_box'
-            },
-            {
-                xtype:'container',
-                itemId:'start_date_selector_box'
-            },
-            {
-                xtype:'container',
-                itemId:'end_date_selector_box'
-            },
-            {
-                xtype:'container',
-                itemId:'query_selector_box'
-            }
-        ]
-    },
-    constructor: function(config){
-        this.mergeConfig(config);
-        this.callParent([this.config]);
-        
-    },
-    initComponent: function() {
-        this.callParent(arguments);
-        this.addEvents(
-            /**
-             * @event settingsChosen
-             * Fires when user clicks done after making settings choices
-             * @param {Rally.technicalservices.SettingsDialog} this
-             * @param {hash} config settings
-             */
-            'settingsChosen',
-            /**
-             * @event cancelChosen
-             * Fires when user clicks the cancel button
-             */
-            'cancelChosen'
-        );
-        this._buildButtons();
-        this._addChoosers();
-    },
-    _buildButtons: function() {
-        this.down('panel').addDocked({
-            xtype: 'toolbar',
-            dock: 'bottom',
-            padding: '0 0 10 0',
-            layout: {
-                type: 'hbox',
-                pack: 'center'
-            },
-            ui: 'footer',
-            items: [
-                {
-                    xtype: 'rallybutton',
-                    text: 'Run',
-                    scope: this,
-                    userAction: 'clicked done in dialog',
-                    handler: function() {
-                        this.fireEvent('settingsChosen', this, this._getConfig());
-                        this.close();
-                    }
-                },
-                {
-                    xtype: 'rallybutton',
-                    text: 'Cancel',
-                    handler: function() {
-                        this.fireEvent('cancelChosen');
-                        this.close();
-                    },
-                    scope: this
-                }
-            ]
-        });
-    },
-    _getConfig: function() {
-        var config = {};
-        if ( this.down('#model_chooser') ) {
-            config.model_type = this.down('#model_chooser').getValue();
-        }
-        if ( this.down('#group_field_chooser') ) {
-            config.group_by_field_name = this.down('#group_field_chooser').getValue();
-            config.group_by_field_type = this.down('#group_field_chooser').getRecord().get('fieldDefinition').attributeDefinition.AttributeType;
-        }
-        if ( this.down('#metric_chooser') ) {
-            config.metric = this.down('#metric_chooser').getValue();
-        }
-        
-        if ( this.down('#start_date_chooser') ) {
-            config.start_date = this.down('#start_date_chooser').getValue();
-        }
-        if ( this.down('#end_date_chooser') ) {
-            config.end_date = this.down('#end_date_chooser').getValue();
-        }
-        if ( this.down('#query_chooser') ) {
-            config.query_string = this.down('#query_chooser').getValue();
-        }
-        return config;
-    },
-    _addChoosers: function() {
-        var me = this;
-        this._addModelChooser();
-        this._addGroupChooser();
-        this._addMetricChooser();
-        this._addDateChoosers();
-        this._addQueryChooser();
-        
-    },
-    _addModelChooser: function() {
-        var me = this;
-        var type_store = Ext.create('Rally.data.custom.Store',{
-            data: me.artifact_types
-        });
-        this.down('#model_selector_box').add({
-            xtype:'rallycombobox',
-            itemId: 'model_chooser',
-            displayField: 'Name',
-            valueField: 'Value',
-            store: type_store,
-            fieldLabel: 'Artifact Type',
-            labelWidth: 75,
-            value: me.model_type,
-            listeners: {
-                scope: this,
-                change: function(cb,new_value){
-                    this.model_type = new_value;
-                    this.group_by_field_name = null;
-                    this.metric = "Count";
-                    this._addGroupChooser();
-                    this._addMetricChooser();
-                }
-            }
-        });
-    },
-    _addGroupChooser: function() {
-        var me = this;
-        
-        this.down('#group_field_selector_box').removeAll();
-        var cb = this.down('#group_field_selector_box').add({
-            xtype:'rallyfieldcombobox',
-            itemId: 'group_field_chooser',
-            model: me.model_type,
-            value: me.group_by_field_name,
-            labelWidth: 75,
-            fieldLabel: 'Group By'
-        });
-        var field_store = cb.getStore();
-        field_store.on({
-            'load': {
-                fn: function(store,records) {
-                    me._filterOutExceptChoices(store,records);
-                    if ( me.group_by_field_name === null ) {
-                        cb.setValue(store.getAt(0));
-                    }
-                },
-             'scope': me
-            }
-        });
-
-    },
-    _addMetricChooser: function() {
-        var me = this;
-        
-        this.down('#metric_selector_box').removeAll();
-        var cb = this.down('#metric_selector_box').add({
-            xtype:'rallyfieldcombobox',
-            itemId: 'metric_chooser',
-            model: me.model_type,
-            value: me.metric,
-            labelWidth: 75,
-            fieldLabel: 'Measure'
-        });
-        var field_store = cb.getStore();
-        field_store.on('load',this._filterOutExceptNumbers,this,true);
-        field_store.on({
-            'load':{
-                fn: function() { 
-                    field_store.add({name:'Count',value:'Count',fieldDefinition:{}});
-                    cb.setValue(me.metric);
-                },
-                single: true
-            }
-        });
-    },
-    _addDateChoosers: function() {
-        var me = this;
-        this.down('#start_date_selector_box').add({
-            xtype: 'datefield',
-            fieldLabel: 'Start Date',
-            itemId: 'start_date_chooser',
-            labelWidth: 75,
-            value: me.start_date,
-            validator: me._dateValidator
-        });
-        
-        this.down('#end_date_selector_box').add({
-            xtype: 'datefield',
-            fieldLabel: 'End Date',
-            itemId:'end_date_chooser',
-            labelWidth: 75,
-            value: me.end_date,
-            validator: me._dateValidator
-        });
-    },
-    _addQueryChooser: function() {
-        var me = this;
-        this.down('#query_selector_box').add({
-            xtype:'textareafield',
-            grow: true,
-            itemId:'query_chooser',
-            labelAlign: 'top',
-            fieldLabel:'Limit to items that currently meet this query filter',
-            value: me.query_string
-        });
-    },
-    _dateValidator: function(value) {
-        return true;
-    },
-    _filterOutExceptChoices: function(store,records) {
-        store.filter([{
-            filterFn:function(field){ 
-                var attribute_type = field.get('fieldDefinition').attributeDefinition.AttributeType;
-                if (  attribute_type == "BOOLEAN" ) {
-                    return true;
-                }
-                if ( attribute_type == "STRING" || attribute_type == "STATE" ) {
-                    if ( field.get('fieldDefinition').attributeDefinition.Constrained ) {
-                        return true;
-                    }
-                }
-                if ( field.get('name') === 'State' ) { 
-                    return true;
-                }
-                //console.log(field.get('name'),field.get('fieldDefinition').attributeDefinition.AttributeType);
-                return false;
-            } 
-        }]);
-    },
-    _filterOutExceptNumbers: function(store,records) {
-        store.filter([{
-            filterFn:function(field){ 
-                var attribute_type = field.get('fieldDefinition').attributeDefinition.AttributeType;
-                if (  attribute_type == "QUANTITY" || attribute_type == "INTEGER" || attribute_type == "DECIMAL" ) {
-                    return true;
-                }
-                if ( field.get('name') == 'Count' ) { return true; }
-                return false;
-            } 
-        }]);
-    }
-    
-});
                 Ext.define('TSStringFilter',{
     extend: 'Rally.data.QueryFilter',
     config: {
@@ -871,6 +428,189 @@ Ext.define('Rally.technicalservices.Logger',{
         return initial_expression;
     }
 });
+                Ext.define('StartDateField', {
+    extend: 'Ext.form.FieldContainer',
+    alias: 'widget.startdatefield',
+
+    requires: [
+        'Rally.ui.DateField'
+    ],
+
+    mixins: [
+        'Ext.form.field.Field',
+    ],
+
+    layout: {
+        type: 'hbox'
+    },
+
+    initComponent: function() {
+        this.callParent(arguments);
+
+        this.add([
+            {
+                xtype: 'radiogroup',
+                name: 'startdate',
+                itemId: 'startdategroup',
+                columns: 3,
+                vertical: false,
+                listeners: {
+                    change: this._onChange,
+                    scope: this,
+                },
+                items: [
+                    {
+                        name: 'startdate',
+                        itemId: 'timebox',
+                        boxLabel: 'Timebox Start Date',
+                        inputValue: 'timebox',
+                        width: 150
+                    },
+                    {
+                        name: 'startdate',
+                        itemId: 'specificdate',
+                        boxLabel: 'Specific Date',
+                        inputValue: 'specificdate',
+                    },
+                    {
+                        xtype: 'rallydatefield',
+                        itemId: 'startdatefield',
+                        plugins: [
+                            'rallyfieldvalidationui'
+                        ],
+                        margin: '0 0 0 10px'
+                    }
+                ]
+            }
+        ]);
+
+        this.initField();
+        this._sync();
+    },
+
+    _onChange: function() {
+        this._sync();
+    },
+
+    _sync: function() {
+        var hasTimeboxScope = !!this.context.getTimeboxScope();
+        this.down('#timebox').setDisabled(!hasTimeboxScope);
+        this.down('#startdatefield').setDisabled(this.down('#startdategroup').getValue().startdate === 'timebox');
+    },
+
+    setValue: function (value) {
+        var hasTimeboxScope = !!this.context.getTimeboxScope();
+        var radioValue = (hasTimeboxScope && (value === 'timebox' || !value)) ? 'timebox' : 'specificdate';
+        this.down('#startdategroup').setValue({ startdate: radioValue });
+        var isSpecificDate = radioValue === 'specificdate';
+        if (isSpecificDate && value) {
+            this.down('#startdatefield').setValue(Rally.util.DateTime.fromIsoString(value));
+        }
+        return this;
+    },
+
+    getValue: function () {
+        var radioValue = this.down('#startdategroup').getValue().startdate;
+        var value = radioValue === 'timebox' ? 'timebox' : Rally.util.DateTime.toIsoString(this.down('#startdatefield').getValue());
+        return value;
+    }
+});
+                Ext.define('EndDateField', {
+    extend: 'Ext.form.FieldContainer',
+    alias: 'widget.enddatefield',
+
+    requires: [
+        'Rally.ui.DateField'
+    ],
+
+    mixins: [
+        'Ext.form.field.Field',
+    ],
+
+    layout: {
+        type: 'hbox'
+    },
+
+    initComponent: function() {
+        this.callParent(arguments);
+
+        this.add([
+            {
+                xtype: 'radiogroup',
+                name: 'enddate',
+                itemId: 'enddategroup',
+                columns: 4,
+                vertical: false,
+                listeners: {
+                    change: this._onChange,
+                    scope: this,
+                },
+                items: [
+                    {
+                        name: 'enddate',
+                        itemId: 'timebox',
+                        boxLabel: 'Timebox End Date',
+                        inputValue: 'timebox',
+                        width: 150
+                    },
+                    {
+                      name: 'enddate',
+                      itemId: 'today',
+                      boxLabel: 'Today',
+                      inputValue: 'today',
+                      width: 75
+                    },
+                    {
+                        name: 'enddate',
+                        itemId: 'specificdate',
+                        boxLabel: 'Specific Date',
+                        inputValue: 'specificdate',
+                    },
+                    {
+                        xtype: 'rallydatefield',
+                        itemId: 'enddatefield',
+                        plugins: [
+                            'rallyfieldvalidationui'
+                        ],
+                        margin: '0 0 0 10px'
+                    }
+                ]
+            }
+        ]);
+
+        this.initField();
+        this._sync();
+    },
+
+    _onChange: function() {
+        this._sync();
+    },
+
+    _sync: function() {
+        var hasTimeboxScope = !!this.context.getTimeboxScope();
+        this.down('#timebox').setDisabled(!hasTimeboxScope);
+        var dateEnabled = this.down('#enddategroup').getValue().enddate === 'specificdate';
+        this.down('#enddatefield').setDisabled(!dateEnabled);
+    },
+
+    setValue: function (value) {
+        var hasTimeboxScope = !!this.context.getTimeboxScope();
+        var radioValue = (hasTimeboxScope && (value === 'timebox' || !value)) ? 'timebox' : 
+          (value === 'today' ? 'today' : 'specificdate');
+        var isSpecificDate = radioValue === 'specificdate';
+        this.down('#enddategroup').setValue({ enddate: radioValue });
+        if (isSpecificDate && value) {
+            this.down('#enddatefield').setValue(Rally.util.DateTime.fromIsoString(value));
+        }
+        return this;
+    },
+
+    getValue: function () {
+        var radioValue = this.down('#enddategroup').getValue().enddate;
+        var value = radioValue === 'specificdate' ? Rally.util.DateTime.toIsoString(this.down('#enddatefield').getValue()) : radioValue;
+        return value;
+    }
+});
                 Ext.define('CustomApp', {
     extend: 'Rally.app.App',
     componentCls: 'app',
@@ -894,21 +634,24 @@ Ext.define('Rally.technicalservices.Logger',{
     ],
     launch: function() {
         if ( ! this.getSetting('type_path') ) {
-            this.down('#chartContainer').add({
-                xtype:'container',
-                html:'No settings applied.  Select "Edit App Settings." from the gear menu.'
-            });
+            this._showMissingSettingMessage('No settings applied.  Select "Edit App Settings." from the gear menu.');
         } else {
             this._refresh();
         }  
     },
+    _showMissingSettingMessage: function(message) {
+        this.down('#chartContainer').add({
+            xtype: 'container',
+            html: message
+        });
+    },
     onTimeboxScopeChange: function () {
         this.callParent(arguments);
 
-        this._getOIDsAndMakeChart(this.allowedValues);
+        this._refresh();
     },
     _addHeaderControls: function() {
-        var blackListFields = [],
+        var blackListFields = ['FlowState'],
             whiteListFields = ['Milestones', 'Tags'],
             modelNames = [this.model.typePath];
         this.down('#header').getLeft().add({
@@ -982,22 +725,22 @@ Ext.define('Rally.technicalservices.Logger',{
     },
 
     _onExportClick: function () {
-      if (!this._isIE()) {
-          var link = document.createElement('a');
-          var chartData = this.down('rallychart').chartData;
-          var data = _.reduce(chartData.categories, function(accum, category, i) {
-              var row = [category];
-              _.each(chartData.series, function(series) {
-                  row.push(series.data[i]);
-              });
-              accum.push(row.join(','));
-              return accum;
-          }, [['Date'].concat(_.pluck(chartData.series, 'name')).join(',')]);
-          link.setAttribute('href', 'data:text/csv;charset=utf-8,' + encodeURI(data.join('\n')));
-          link.setAttribute('download', 'cfd.csv');
-          link.click();
-      }
-  },
+        if (!this._isIE()) {
+            var link = document.createElement('a');
+            var chartData = this.down('rallychart').chartData;
+            var data = _.reduce(chartData.categories, function(accum, category, i) {
+                var row = [category];
+                _.each(chartData.series, function(series) {
+                    row.push(series.data[i]);
+                });
+                accum.push(row.join(','));
+                return accum;
+            }, [['Date'].concat(_.pluck(chartData.series, 'name')).join(',')]);
+            link.setAttribute('href', 'data:text/csv;charset=utf-8,' + encodeURI(data.join('\n')));
+            link.setAttribute('download', 'cfd.csv');
+            link.click();
+        }
+    },
 
     _getChartTitle: function(type_path,group_by_field){
         var type = this._deCamelCase(type_path);
@@ -1012,6 +755,7 @@ Ext.define('Rally.technicalservices.Logger',{
         }
         return title;
     },
+
     _deCamelCase: function(camelCaseText){
         this.logger.log("_deCamelCase",camelCaseText);
         
@@ -1022,17 +766,49 @@ Ext.define('Rally.technicalservices.Logger',{
         this.logger.log(" .. ", removed_custom_field_prefix);
         return removed_custom_field_prefix;
     },
+
+    _getStartDate: function() {
+        var startDate = this.getSetting('start_date');
+        if (startDate === 'timebox') {
+            var timeboxScope = this.getContext().getTimeboxScope();
+            return timeboxScope && timeboxScope.getRecord() && timeboxScope.getStartDate();
+        } else {
+            return startDate;
+        }
+    },
+
+    _getEndDate: function() {
+        var endDate = this.getSetting('end_date');
+        if (endDate === 'timebox') {
+            var timeboxScope = this.getContext().getTimeboxScope();
+            return timeboxScope && timeboxScope.getRecord() && timeboxScope.getEndDate();
+        } else if (endDate === 'today') {
+            return Rally.util.DateTime.toIsoString(new Date()); 
+        } else {
+            return endDate;
+        }
+    },
+
     _preProcess: function() {
-        this._getAllowedValues().then({
-            scope: this,
-            success: function(allowedValues) {
-              this.allowedValues = allowedValues;
-              this._addHeaderControls();
-            },
-            failure:function(message){
-                this.down('#chartContainer').add({xtype:'container',html:'message'});
-            }
-        });
+        var startDate = this._getStartDate();
+        var endDate = this._getEndDate();
+
+        if (!startDate) {
+            this._showMissingSettingMessage('No start date available.  Select "Edit App Settings." from the gear menu.');
+        } else if (!endDate) {
+          this._showMissingSettingMessage('No end date available.  Select "Edit App Settings." from the gear menu.');
+        } else {
+            this._getAllowedValues().then({
+                scope: this,
+                success: function(allowedValues) {
+                  this.allowedValues = allowedValues;
+                  this._addHeaderControls();
+                },
+                failure:function(message){
+                    this.down('#chartContainer').add({xtype:'container',html:'message'});
+                }
+            });
+        }
     },
     _getAllowedValues:function(){
         var deferred = Ext.create('Deft.Deferred');
@@ -1132,8 +908,8 @@ Ext.define('Rally.technicalservices.Logger',{
         var project = this.getContext().getProject().ObjectID;
         var type_path = this.getSetting('type_path');
         var group_by_field = this.getSetting('group_by_field');
-        var start_date = this.getSetting('start_date');
-        var end_date = this.getSetting('end_date');
+        var start_date = this._getStartDate();
+        var end_date = this._getEndDate();
         
         var value_field = this.getSetting('metric_field');
         
@@ -1369,20 +1145,18 @@ Ext.define('Rally.technicalservices.Logger',{
         },
         {
             name: 'start_date',
-            xtype: 'rallydatefield',
+            xtype: 'startdatefield',
             fieldLabel: 'Start Date',
             labelWidth: 100,
             labelAlign: 'left',
-            minWidth: 200,
             margin: 10
         },
         {
             name: 'end_date',
-            xtype: 'rallydatefield',
+            xtype: 'enddatefield',
             fieldLabel: 'End Date',
             labelWidth: 100,
             labelAlign: 'left',
-            minWidth: 200,
             margin: 10
         },
         {
