@@ -1,31 +1,41 @@
 # Super Customizable Cumulative Flow Diagram
 
-This cannot be used in on-premises installations.
+A super-customizable cumulative flow diagram, aka a CFD, for Rally.
 
-![](screenshot.png)
+**Note: This cannot be used in on-premises installations.**
 
-## Description
+![](images/screenshot.png)
 
-This is a new chart.  You can choose the record type to make a date-driven area diagram from.  Also choose:
+## Installation and Settings
 
- * An artifact type to get history
- * A field from the artifact type to group on (the different colors of the area chart)
- * A field from the artifact (or count) to calculate the Y axis
- * A beginning and end date -- Keep in mind that there is not historical data before 11/11/11.
- * An optional query -- this is in the normal Rally query language and will be used to limit the results that are calculated
-    the item must match the filter at this point in time in order to be used for tracking the history (doesn't matter if it
-    moved from Release 1 to Release 2 in the period, if you limit to Release 2, we'll see it all the time because it's there now)
- * The optional query now supports the date keywords (but NOT the math) listed [here](https://help.rallydev.com/use-grid-app-queries#dates)
- * Configuration settings are saved
+The app is installed as a Custom HTML App ([see help documentation](https://help.rallydev.com/custom-html))
+Once the app is installed, use the gear menu on the app panel and select "Edit App Settings".
 
-### TODO
- * Perhaps an additional filter for the lookback itself (that is, apply the limits every day instead of (in addition to?) at the end and retconning)
- * Add query math for date keywords
+![](images/settings.png)
+
+#### Artifact Type
+Pick the type of data to include in the chart- Defect for example.
+
+#### Group By
+Pick the attribute on the previously selected type which will be used for generating the summary data for the chart.
+
+#### Measure
+Pick how the summary should be performed- for example, a simple count, or a sum of the Plan Estimates.
+
+#### Start Date
+Choose the starting date for the chart.  If the app is used on a timebox (iteration/release) scoped custom page you can choose to automatically use that timebox's start date.  You may also choose a specific date.
+
+#### End Date
+Choose the ending date for the chart.  If the app is used on a timebox (iteration/release/milestone) scoped custom page you can choose to automatically use that timebox's end date.  You may also choose 'Today' or a specific date.
+
+#### Query
+In addition to the advanced filtering component in the app, you can write your own complex filter queries. [Extensive documentation](https://help.rallydev.com/grid-queries?basehost=https://rally1.rallydev.com) is available. This might be useful if you want to always limit the chart to certain complex criteria.
 
 ## Development Notes
 
 Jan 2018
  * Update to sdk 2.1
+ * Move to using rally app builder rather than grunt 
  * Add export
  * Add advanced filtering
  * Add support for timebox scoped pages
@@ -37,7 +47,17 @@ Jan 2018
  * Grouping on fields with allowed values that include booleans or no selection now display series correctly
  * App uses rc3 SDK
 
-### First Load
+ ### TODO
+ * Perhaps an additional filter for the lookback itself (that is, apply the limits every day instead of (in addition to?) at the end and retconning)
+ * Add query math for date keywords
+
+### Development
+
+Use [Rally App Builder](https://github.com/Rallyapps/rally-app-builder) to develop/build/run this app.
+
+### Testing
+
+Use grunt to test this app.
 
 If you've just downloaded this from github and you want to do development,
 you're going to need to have these installed:
