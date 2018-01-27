@@ -493,14 +493,17 @@ Ext.define('Rally.technicalservices.Logger',{
     },
 
     _sync: function() {
-        var hasTimeboxScope = !!this.context.getTimeboxScope();
-        this.down('#timebox').setDisabled(!hasTimeboxScope);
+        this.down('#timebox').setDisabled(!this._hasTimeboxScope());
         this.down('#startdatefield').setDisabled(this.down('#startdategroup').getValue().startdate === 'timebox');
     },
 
+    _hasTimeboxScope: function() {
+        var timeboxScope = this.context.getTimeboxScope();
+        return !!timeboxScope && timeboxScope.getType() !== 'milestone';
+    },
+
     setValue: function (value) {
-        var hasTimeboxScope = !!this.context.getTimeboxScope();
-        var radioValue = (hasTimeboxScope && (value === 'timebox' || !value)) ? 'timebox' : 'specificdate';
+        var radioValue = (this._hasTimeboxScope() && (value === 'timebox' || !value)) ? 'timebox' : 'specificdate';
         this.down('#startdategroup').setValue({ startdate: radioValue });
         var isSpecificDate = radioValue === 'specificdate';
         if (isSpecificDate && value) {
