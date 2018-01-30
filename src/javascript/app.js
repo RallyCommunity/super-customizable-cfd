@@ -307,6 +307,8 @@ Ext.define('CustomApp', {
         var chart_title = this._getChartTitle(type_path,group_by_field);
         this.logger.log("  Title: ", chart_title);
         
+        var tickInterval = Math.ceil((moment(end_date).diff(moment(start_date), 'days') / this.getWidth()) * 100);
+        
         this.down('#chartContainer').add({
             xtype:'rallychart',
             chartColors: [
@@ -359,7 +361,8 @@ Ext.define('CustomApp', {
                  },
                  xAxis: {
                      tickmarkPlacement: 'on',
-                     tickInterval: 30,
+                     tickInterval: tickInterval,
+                     endOnTick: true,
                      title: {
                          text: ''
                      }
