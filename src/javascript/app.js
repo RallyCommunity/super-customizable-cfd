@@ -362,7 +362,6 @@ Ext.define('CustomApp', {
                  xAxis: {
                      tickmarkPlacement: 'on',
                      tickInterval: tickInterval,
-                     endOnTick: true,
                      title: {
                          text: ''
                      }
