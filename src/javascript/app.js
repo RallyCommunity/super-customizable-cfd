@@ -188,7 +188,9 @@ Ext.define('CustomApp', {
             this._getAllowedValues().then({
                 scope: this,
                 success: function(allowedValues) {
-                  this.allowedValues = allowedValues;
+                  this.allowedValues = _.map(allowedValues, function(allowedValue) {
+                      return allowedValue === '' ? 'None' : allowedValue;
+                  });
                   this._addHeaderControls();
                 },
                 failure:function(message){
@@ -337,7 +339,7 @@ Ext.define('CustomApp', {
                 endDate: end_date,/*
                 /*tz: "America/Anchorage",*/
                 allowed_values: allowed_values,
-                allowed_oids: allowed_oids,
+                //allowed_oids: allowed_oids,
                 value_field: value_field,
                 group_by_field: group_by_field
             },
