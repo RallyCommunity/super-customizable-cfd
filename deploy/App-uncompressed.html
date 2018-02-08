@@ -316,13 +316,13 @@
      * snapshot will actually say null
      * 
      */
-    _convertNullToBlank:function(snapshots){
-        var number_of_snapshots = snapshots.length;
-        for ( var i=0;i<number_of_snapshots;i++ ) {
-            if ( snapshots[i][this.group_by_field] === null ) {
-                snapshots[i][this.group_by_field] = "";
+    _convertNullToBlank:function(snapshots) {
+        _.each(snapshots, function(snapshot) {
+            if (snapshot[this.group_by_field] === null ||
+                !snapshot.hasOwnProperty(this.group_by_field)) {
+                snapshot[this.group_by_field] = 'None';
             }
-        }
+        }, this);
         return snapshots;
     },
     _getAllowedSnapshots:function(snapshots){
@@ -804,7 +804,9 @@ Ext.define('Rally.technicalservices.Logger',{
             this._getAllowedValues().then({
                 scope: this,
                 success: function(allowedValues) {
-                  this.allowedValues = allowedValues;
+                  this.allowedValues = _.map(allowedValues, function(allowedValue) {
+                      return allowedValue === '' ? 'None' : allowedValue;
+                  });
                   this._addHeaderControls();
                 },
                 failure:function(message){
@@ -953,7 +955,7 @@ Ext.define('Rally.technicalservices.Logger',{
                 endDate: end_date,/*
                 /*tz: "America/Anchorage",*/
                 allowed_values: allowed_values,
-                allowed_oids: allowed_oids,
+                //allowed_oids: allowed_oids,
                 value_field: value_field,
                 group_by_field: group_by_field
             },

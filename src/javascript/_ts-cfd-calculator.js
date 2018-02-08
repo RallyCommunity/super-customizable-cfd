@@ -163,13 +163,13 @@ Ext.define("Rally.TechnicalServices.CFDCalculator", {
      * snapshot will actually say null
      * 
      */
-    _convertNullToBlank:function(snapshots){
-        var number_of_snapshots = snapshots.length;
-        for ( var i=0;i<number_of_snapshots;i++ ) {
-            if ( snapshots[i][this.group_by_field] === null ) {
-                snapshots[i][this.group_by_field] = "";
+    _convertNullToBlank:function(snapshots) {
+        _.each(snapshots, function(snapshot) {
+            if (snapshot[this.group_by_field] === null ||
+                !snapshot.hasOwnProperty(this.group_by_field)) {
+                snapshot[this.group_by_field] = 'None';
             }
-        }
+        }, this);
         return snapshots;
     },
     _getAllowedSnapshots:function(snapshots){
