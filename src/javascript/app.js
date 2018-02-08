@@ -309,6 +309,13 @@ Ext.define('CustomApp', {
         
         var tickInterval = Math.ceil((moment(end_date).diff(moment(start_date), 'days') / this.getWidth()) * 100);
         
+        var findConfig = {
+            _TypeHierarchy: type_path,
+            ObjectID: { $in: allowed_oids },
+        };
+        if (/hierarchicalrequirement/i.test(type_path)) {
+            findConfig.Children = null; //exclude epics (leaf stories only)
+        }
         this.down('#chartContainer').add({
             xtype:'rallychart',
             chartColors: [
@@ -335,11 +342,7 @@ Ext.define('CustomApp', {
                 group_by_field: group_by_field
             },
             storeConfig: {
-                find: {
-                    _TypeHierarchy: type_path,
-                    ObjectID: { $in: allowed_oids },
-                    Children: null //only applies to stories
-                },
+                find: findConfig,
                 hydrate: [group_by_field],
                 fetch: [group_by_field,value_field],
                 removeUnauthorizedSnapshots : true,
